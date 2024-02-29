@@ -1,0 +1,323 @@
+---
+title: "refinement1"
+format: html
+editor: visual
+---
+
+```{}
+```
+
+\#######
+
+Skript nur für etablierte Raw Data Formatierung der Messwert-Tabellen (getrennt nach Datum/zusammengehörige RoundOrders und in einheitlichem Tabellen-Layout), für alle anderen Tabellen (frühe Messläufe) ist das Data wrangling im Skript "SpecialScript" zusammengefasst (muss ich noch bereinigen, stelle ich heute Nachmittag auf GitHub)
+
+Messwerte Tensiometer_readings sind hier noch nicht enthalten
+
+\#######
+
+Chunk1:
+
+Einlesen der Files, Variablen benennen und erstellen im Environment
+
+```{r}
+library(readxl)
+library(tidyverse)
+library(reshape2)
+library(stringr)
+
+#Skript für ein "normales" (etabliertes) file format der Messungen:
+
+#den jeweiligen Pfad zum Ordenr mit den .csv files, soll keine weiteren Ordner enthalten!
+path<- "C:/Users/HabisohnC/Desktop/Charlotte/WheatVIZ/07_02_2024_wheat viz - Kopie"
+
+#Einlesen aller .csv files 
+filenames<-list.files(path, full.names = T)
+for(i in filenames){newfile<-read.csv(i)
+output<-gsub("C:/Users/HabisohnC/Desktop/Charlotte/WheatVIZ/07_02_2024_wheat viz - Kopie/", "WheatVIZ_", tools::file_path_sans_ext(i))
+assign(output, newfile)
+rm(newfile)
+}
+
+### Benennung und Zugriff
+
+list1<-list(WheatVIZ_Fc_Plant,WheatVIZ_Hc_avgSpectrum,WheatVIZ_Hc_Plant, WheatVIZ_Kinetic, WheatVIZ_Rgb_Color_Plant,WheatVIZ_Rgb_Morpho_Plant)
+names(list1)<-c("WheatVIZ_FC", "WheatVIZ_Spec", "WheatVIZ_HC", "WheatVIZ_KIN","WheatVIZ_RGBC", "WheatVIZ_RGBMORP" )
+list2env(list1, envir = .GlobalEnv)
+
+HC_run1<-WheatVIZ_HC
+Spec_run1<-WheatVIZ_Spec
+RGBC_run1<-WheatVIZ_RGBC
+RGBM_run1<-WheatVIZ_RGBMORP
+FC_run1<-WheatVIZ_FC
+KIN_run1<-WheatVIZ_KIN
+list2<-list(HC_run1,Spec_run1, RGBC_run1, RGBM_run1,FC_run1, KIN_run1)
+names(list2)<-c("HC_run1","Spec_run1", "RGBC_run1", "RGBM_run1", "FC_run1", "KIN_run1")
+list2env(list2, env=.GlobalEnv)
+
+
+
+
+
+```
+
+Chunk 2:
+
+Splitting der Tables in meta und value tables, Umformatierung der value_tables zu longtables (für ggplot):
+
+```{r}
+
+###Variablen-Nummern und Column-Indices müssen im Moment noch für jeden Lauf einzeln angepasst werden, dies hier ist nur das Schema
+###Die einzelnen wellenlängen der Hyperspectralmessung habe ich vorerst ausgelassen, da noch nihct beschlossen ist, wie ich damit vorgehen werde/welche Kalkulationen gemacht werden damit
+
+#hyperspectral_indices
+hc<-cbind(HC_run1$Plant.ID,HC_run1[,grep("*median", colnames(HC_run1))]  ,HC_run1[,grep("*avg", colnames(HC_run1))])
+colnames(hc)<-c( "Plant.ID", "NDVI.median"  ,    "NDVI2.median"  ,   "PSRI.median"   ,   "PRI.median"  ,     "OSAVI.median"  ,   "SIPI.median"    ,  "MCARI1.median"  ,  "Size.median"   ,  
+                 "NDVI.avg", "NDVI2.avg"  ,      "PSRI.avg"     ,    "PRI.avg"      ,    "OSAVI.avg"    ,    "SIPI.avg"     ,    "MCARI1.avg"  ,     "Size.avg")
+
+#fluorescence
+fc<-cbind(FC_run1$Plant.ID, FC_run1[,13:17])
+colnames(fc)<-c("Plant.ID","Fm" ,"Fo","Fv","QY_max","Size")
+
+#rgb_color
+rgbc<-cbind(RGBC_run1$Plant.ID, RGBC_run1[,13:21])
+colnames(rgbc)<-c( "Plant.ID", "RGB.34", "X38" ,"X22.","RGB.45" ,"X54"  ,"X13." ,"RGB.45.1","X55","X36.")
+
+
+#kinetics
+kin<-cbind(KIN_run1$Plant.ID, KIN_run1[,13:30])
+colnames(kin)<-c( "Plant.ID","X50000" ,"X250000","X450000","X650000","X850000" ,"X1050000","X1250000","X1450000","X1650000","X1850000","X2150000","X2450000",
+                  "X2550000","X2650000" ,"X2750000" ,"X2850000" ,"X2950000","X3150000"    )
+
+
+#rgb_morphology
+rgbm<-cbind(RGBM_run1$Plant.ID, RGBM_run1[,13:23])
+colnames(rgbm7)<-c( "Plant.ID", "AREA_MM"    ,     "AREA_PX"    ,     "COMPACTNESS"  ,   "ECCENTRICITY",    "ISOTROPY"  ,      "PERIMETER_MM" ,   "PERIMETER_PX"  ,  "RMS"     ,        "ROUNDNESS"   ,    "ROUNDNESS2", "SOL" ) 
+
+
+###Variablen-Nummern und Column-Indices müssen im Moment noch für jeden Lauf einzeln angepasst werden
+
+#metatable small version vorerst
+metatable<-cbind(HC_run1Plant.ID, HC_run1$Tray.Info, HC_run1$Plant.Name)
+colnames(metatable)<-c("Plant.ID", "Tray.Info","Plant.Name")
+metatable<-as_tibble(metatable)
+metatable77<-metatable %>% mutate(condition = if_else(grepl("*DS", Tray.Info), "Drought_stress", "Control" ))
+
+
+
+#merge der tables und umformatierung zum long table format:
+fhc<-merge(hc,fc, by="Plant.ID", all=TRUE)
+rgbkin<-merge(rgbc,kin, by="Plant.ID", all=TRUE)
+merge_table<-merge(rgbm, rgbkin, by="Plant.ID", all=TRUE)
+merge_table1<-merge(merge_table,fhc, by="Plant.ID", all=TRUE)
+melt_tableAll1<-melt(merge_table1, measure.vars = 2:60)
+
+#die Column-Zahl muss angepasst werden, je nachdem, welche Indices/Parameter wirklich gemessen wurden/im table sind bei jedem Durchgang
+
+
+
+```
+
+```{}
+```
+
+Chunk 3:
+
+Berechnung aller means und standard deviation (kann man auch gegen andere Streu-/Lagemaße, etc. austauschen) in jedem table und markierung mit der "Run Nummer"
+
+```{r}
+
+#Zu Fuss:
+
+#Run9
+ select_from_melttableFHC<-melt_tableFHC9%>%inner_join(select(metatable77, -Tray.Info), by="Plant.ID")%>%group_by(variable, condition)%>%summarise_at(vars(value), list(mean=mean, sd=sd))%>%mutate(Run="Run9")
+
+
+#Run8
+ select_from_melttableAll8<-melt_tableAll8%>%
+  inner_join(select(metatable77, -Tray.Info),
+  by="Plant.ID")%>%group_by(variable,condition)%>%
+  summarise_at(vars(value), list(mean=mean, sd=sd))%>%mutate(Run="Run_8")
+ 
+ 
+#Run7
+select_from_melttableAll7<-melt_tableAll7%>%
+  inner_join(select(metatable77, -Tray.Info),
+  by="Plant.ID")%>%group_by(variable,condition)%>%
+  summarise_at(vars(value), list(mean=mean, sd=sd))%>%mutate(Run="Run_7")
+
+
+
+#Run6
+select_from_melttableAll6<-melt_tableAll6%>%
+  inner_join(select(metatable77, -Tray.Info),
+  by="Plant.ID")%>%group_by(variable,condition)%>%
+  summarise_at(vars(value), list(mean=mean, sd=sd))%>%mutate(Run="Run_6")
+
+#Run5
+select_from_melttableAll5<-melt_tableAll5%>%
+  inner_join(select(metatable77, -Tray.Info),
+  by="Plant.ID")%>%group_by(variable,condition)%>%
+  summarise_at(vars(value), list(mean=mean, sd=sd))%>%mutate(Run="Run_5")
+
+#Run4
+select_from_melttableAll4<-melt_tableAll4%>%
+  inner_join(select(metatable77, -Tray.Info),
+  by="Plant.ID")%>%group_by(variable,condition)%>%
+  summarise_at(vars(value), list(mean=mean, sd=sd))%>%mutate(Run="Run_4")
+
+#Run3
+select_from_melttableAll3<-melt_tableAll3%>%
+  inner_join(select(metatable77, -Tray.Info),
+  by="Plant.ID")%>%group_by(variable,condition)%>%
+  summarise_at(vars(value), list(mean=mean, sd=sd))%>%mutate(Run="Run_3")
+
+#Run2
+select_from_melttableAll2<-melt_tableAll2%>%
+  inner_join(select(metatable77, -Tray.Info),
+  by="Plant.ID")%>%group_by(variable,condition)%>%
+  summarise_at(vars(value), list(mean=mean, sd=sd))%>%mutate(Run="Run_2")
+
+
+#Run1
+select_from_melttableAll1<-melt_tableAll%>%
+  inner_join(select(metatable77, -Tray.Info),
+  by="Plant.ID")%>%group_by(variable,condition)%>%
+  summarise_at(vars(value), list(mean=mean, sd=sd))%>%mutate(Run="Run_1")
+
+
+############################
+#mit Funktion:
+#obiger code kann einfach durch die folgende Funktion ersetzt werden:
+
+
+#Argument ist der melttable_NummerX
+
+
+join_and_calc<-function(x){
+  s<-as.character(substitute(x))
+  x%>%
+    inner_join(select(metatable77, -Tray.Info),
+               by="Plant.ID")%>%group_by(variable, condition)%>%
+    summarise_at(vars(value), list(mean=mean, sd=sd))%>%
+    mutate(Run=paste0("Run_", str_extract_all(s, "\\d+")))}
+
+
+#output
+ join_and_calc(melt_tableAll8)
+# A tibble: 86 × 5
+# Groups:   variable [43]
+#   variable condition         mean      sd Run  
+#   <fct>    <chr>            <dbl>   <dbl> <chr>
+# 1 RGB.34   Control        52955.  23831.  Run_8
+# 2 RGB.34   Drought_stress 41247.  15711.  Run_8
+# 3 X38      Control        21565.   9801.  Run_8
+# 4 X38      Drought_stress 15148.   8921.  Run_8
+# 5 X22.     Control        12108.   7904.  Run_8
+# 6 X22.     Drought_stress  8851.   7359.  Run_8
+# 7 RGB.45   Control          140.    122.  Run_8
+# 8 RGB.45   Drought_stress    83.9    88.1 Run_8
+# 9 X54      Control         1467.   1402.  Run_8
+#10 X54      Drought_stress  1300.   2140.  Run_8
+# ℹ 76 more rows
+# ℹ Use `print(n = ...)` to see more rows
+
+#das funktioniert jetzt :))))))))))))))))
+
+#Funktion, die mir das alles mit einem paster fertigt:
+#metatable77 ist representativ für alle metatables
+#da könnte ich auch noch einen for-loop/lapply schreiben, der mir über eine Liste drüberfährt
+#habe ich noch vor, ist aber Teil eines grösseren parts dieses Projektes ("List Tasks")
+
+##############################
+
+
+```
+
+```{r}
+
+
+```
+
+```{r}
+
+
+```
+
+Um auf die Indices/Parameter schnell zugreifen zu können, gibt es diese Funktion: erstellt einen table über alle runs (die Teil einer Liste sind) und einem als Argument angegeben Index/Parameter, kann sofort geplottet werden
+
+```{r}
+
+#this works:
+select_indices<-function(x,y){
+  result<-lapply(x, function(z){
+    z%>%filter(variable==y)})
+   
+  return(result)
+}
+
+#Funktion arbeitet mit folgender Liste aller bisherigen Messläufe:
+
+list_melttables<-list(select_from_melttableAll1, select_from_melttableAll2, select_from_melttableAll3, select_from_melttableAll4,select_from_melttableAll5, select_from_melttableAll6,select_from_melttableAll7,select_from_melttableFHC)
+
+#TODO:irgendwie müsste ich die Listenerstellung noch verbessern..."List Tasks"
+#Liste mittels Funktion "automatisch" erweitern???
+
+
+#zum Beispiel NDVI.median:
+thing<-select_indices(list_melttables,"NDVI.median")%>%bind_rows()
+
+# A tibble: 16 × 5
+# Groups:   variable [1]
+#   variable    condition        mean      sd Run  
+#   <fct>       <chr>           <dbl>   <dbl> <chr>
+# 1 NDVI.median Control         0.718  0.0415 Run_1
+# 2 NDVI.median Drought_stress NA     NA      Run_1
+# 3 NDVI.median Control         0.715  0.0391 Run_2
+# 4 NDVI.median Drought_stress  0.723  0.0290 Run_2
+# 5 NDVI.median Control         0.729  0.0314 Run_3
+# 6 NDVI.median Drought_stress NA     NA      Run_3
+# 7 NDVI.median Control         0.732  0.0316 Run_4
+# 8 NDVI.median Drought_stress  0.738  0.0234 Run_4
+# 9 NDVI.median Control         0.736  0.0260 Run_5
+#10 NDVI.median Drought_stress  0.743  0.0265 Run_5
+#11 NDVI.median Control         0.778  0.0229 Run_6
+#12 NDVI.median Drought_stress  0.784  0.0212 Run_6
+#13 NDVI.median Control         0.743  0.0245 Run_7
+#14 NDVI.median Drought_stress  0.755  0.0251 Run_7
+#15 NDVI.median Control         0.786  0.0199 Run9 
+#16 NDVI.median Drought_stress  0.773  0.0188 Run9 
+
+#auch gleich plotten:
+#Beispiel:plotting von NDVI und PSRI Control vs. DS
+
+quick<-select_indices(list_melttables[-6],"PSRI.avg")%>%bind_rows()%>%ggplot(aes(x=Run,y=mean,color=condition))+ylab("Mean PSRI")+geom_point()+geom_errorbar(aes(ymin=mean - sd, ymax=mean+sd), width=.2, position=position_dodge(0.05))
+
+
+quick2<-select_indices(list_melttables[- 6],"NDVI.avg")%>%bind_rows()%>%ggplot(aes(x=Run,y=mean,color=condition))+ylab("Mean NDVI")+geom_point()+geom_errorbar(aes(ymin=mean - sd, ymax=mean+sd), width=.2, position=position_dodge(0.05))
+
+
+ggarrange(quick, quick2, common.legend=TRUE, legend="top")
+
+
+#plotting von QY_max und Size Control vs. DS
+
+ quick3<-select_indices(list_melttables[-6],"QY_max")%>%bind_rows()%>%ggplot(aes(x=Run,y=mean,color=condition))+ylab("Mean QY_max")+geom_point()+geom_errorbar(aes(ymin=mean - sd, ymax=mean+sd), width=.2, position=position_dodge(0.05))
+ 
+ quick4<-select_indices(list_melttables[- 6],"Size")%>%bind_rows()%>%ggplot(aes(x=Run,y=mean,color=condition))+ylab("Mean Size")+geom_point()+geom_errorbar(aes(ymin=mean - sd, ymax=mean+sd), width=.2, position=position_dodge(0.05))
+
+ ggarrange(quick3, quick4, common.legend=TRUE, legend="top") 
+ 
+```
+
+Plotting nach genotype; Hierfür wird die Plant.ID in Verbindung mit dem Plant.Name benötigt. Join und Abgleich wird wieder in einer Funktion verpackt sein, dessen output dann sofort visualisiert werden kann:
+
+```{r}
+#sollte ich heute/morgen fertig bekommen (hatte gestern einen kleinen hold up, an dem ich lang gesessen bin ....)
+
+```
+
+```{r}
+
+```
+
+The `echo: false` option disables the printing of code (only output is displayed).
