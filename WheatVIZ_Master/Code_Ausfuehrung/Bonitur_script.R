@@ -48,17 +48,8 @@ Bonitur_growthCHamber_slim<-cbind.data.frame(Bonitur_growthCHamber$Date,
                                              Bonitur_growthCHamber$TillerNumber)
 colnames(Bonitur_growthCHamber_slim)<-c("Date", "Plant.ID", "Treatment", "LeafNumber", "TillerNumber")
 Bonitur_growthCHamber_slimMelt<-melt(Bonitur_growthCHamber_slim, measure.vars = 4:5)
-plot_Bonitur<-Bonitur_growthCHamber_slimMelt%>%filter(variable=="LeafNumber")%>%ggplot(aes(x=Date, y=value, color=Treatment))+geom_point()
-plot_Bonitur
 
 
-#besserer plot
-Bonitur_growthCHamber_slimMelt%>%
-  filter(variable=="LeafNumber")%>%
-  ggplot(aes(x=Date, y=as.numeric(as.character(value)), 
-             color=Treatment))+geom_point(aes(size=value))+
-  scale_shape_manual(values=c("23", "25"))+
-  theme_bw()+ylab("Leaf Number")+labs(title = "Leaf Number over Time")
 
 
 
