@@ -59,3 +59,25 @@ Bonitur_growthCHamber_slimMelt%>%
              color=Treatment))+geom_point(aes(size=value))+
   scale_shape_manual(values=c("23", "25"))+
   theme_bw()+ylab("Leaf Number")+labs(title = "Leaf Number over Time")
+
+
+
+#mit geom_smooth():
+
+Bonitur_growthCHamber_slimMelt%>%
+  filter(variable=="LeafNumber")%>%
+  ggplot(aes(x=Date, y=as.numeric(as.character(value)), 
+             color=Treatment))+geom_point(aes(size=value))+
+  scale_shape_manual(values=c("23", "25"))+
+  theme_bw()+ylab("Leaf Number")+labs(title = "Leaf Number over Time")+
+  geom_smooth(method="lm", aes(color=Treatment, group=Treatment))
+
+
+
+Bonitur_growthCHamber_slimMelt%>%
+  filter(variable=="TillerNumber")%>%
+  ggplot(aes(x=Date, y=as.numeric(as.character(value)), 
+             color=Treatment))+geom_point(aes(size=value))+
+  scale_shape_manual(values=c("23", "25"))+
+  theme_bw()+ylab("Tiller Number")+labs(title = "Tiller Number over Time")+
+  geom_smooth(method="lm", aes(color=Treatment, group=Treatment))
