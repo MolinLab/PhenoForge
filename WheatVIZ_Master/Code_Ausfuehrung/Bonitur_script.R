@@ -65,19 +65,21 @@ Bonitur_growthCHamber_slimMelt%>%
 #mit geom_smooth():
 
 #TillerNUmber
-
-ggplot(aes(x=Date, y=as.numeric(value),
-           color=Treatment))+geom_point(aes(size=as.numeric(value)))+
-  scale_shape_manual(values=c("23", "25"))+
-  theme_bw()+ylab("Leaf Number")+labs(title = "Leaf Number over Time")+
-  geom_smooth(method="lm", aes(color=Treatment, group=Treatment))
-
-
-#LeafNumber
-
-ggplot(aes(x=Date, y=as.numeric(value),
-           color=Treatment))+geom_point(aes(size=as.numeric(value)))+
-  scale_shape_manual(values=c("23", "25"))+
+Bonitur_growthCHamber_slimMelt%>%
+  filter(variable=="TillerNumber")%>%
+  ggplot(aes(x=Date, y=as.numeric(value),
+             color=Treatment))+geom_point()+
   theme_bw()+ylab("Tiller Number")+labs(title = "Tiller Number over Time")+
   geom_smooth(method="lm", aes(color=Treatment, group=Treatment))
 
+ggsave("TillerNumber_Bonitur.png")
+
+#LeafNumber
+Bonitur_growthCHamber_slimMelt%>%
+  filter(variable=="LeafNumber")%>%
+  ggplot(aes(x=Date, y=as.numeric(value),
+             color=Treatment))+geom_point()+
+  theme_bw()+ylab("Leaf Number")+labs(title = "Leaf Number over Time")+
+  geom_smooth(method="lm", aes(color=Treatment, group=Treatment))
+
+ggsave("LeafNumber_Bonitur.png")
