@@ -31,13 +31,6 @@ Bonitur_all_slim<-cbind.data.frame(bonitur_run1, vector_PlantID_allBonitur)
 
 
 
-##gehÃ¶rt zum top_bottom Gschichtl:
-
-DS_plantsOnlyNDVI_ordered<-DS_plantsOnlyNDVI%>%arrange(desc(Mean))
-> View(DS_plantsOnlyNDVI_ordered)
-> DS_plantsOnlyNDVI_ordered<-DS_plantsOnlyNDVI%>%
-  filter(Measuring.Date=="2024-02-28")%>%arrange(desc(Mean))
-
 
 #Boniturplot
 
