@@ -1,0 +1,7 @@
+"0",""
+"0","join_and_calc<-function(x){"
+"0","  x%>%"
+"0","    inner_join(select(metatable, -Tray.Info),"
+"0","               by=""Plant.ID"")%>%group_by(variable, Condition)%>%"
+"0","    summarise_at(vars(value), list(Mean=mean, SD=sd))%>%mutate(Date=x$Measuring.Date[1])}"
+"0",""
