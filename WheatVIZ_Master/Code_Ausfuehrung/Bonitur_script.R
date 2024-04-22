@@ -1,18 +1,9 @@
 #Bonitur_script
 
 
-#für zwei Boniturtage
-for(i in seq(1:nrow(bonitur_relevant))){
-  bonitur_PlantID<-paste(bonitur_relevant$Tray[i],bonitur_relevant$GenotypeNr[i],
-                         sep="_")
-  
-  vector_PlantID<-append(vector_PlantID,bonitur_PlantID)
-}
+Bonitur_1<-read_excel("C:/Users/HabisohnC/Desktop/Charlotte/WheatVIZ/WheatVIZ_ClimateChamber_2024_Masterfile.xlsx")
 
-vector_PlantID
-
-Bonitur_tiny<-cbind.data.frame(bonitur_relevant$Plant.ID, bonitur_relevant$LeafNumber,
-                               bonitur_relevant$TillerNumber)
+bonitur_run1<-Bonitur_1
 
 
 #für alle Boniturtage
