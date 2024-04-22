@@ -820,7 +820,10 @@ die trendline plots über alle genotypes:
 
 vector_Messtager<-c()
 
-testr<-select_columns(names_andMCARI1avg, "value")%>%bind_cols()
+testr_new<-select_columns(names_andMCARI1avg, "value")%>%
+  cbind.data.frame(dataframe1)
+
+
 for(i in names_andMCARI1avg){vector_Messtager[length(vector_Messtager)+1]<-
   i$Measuring.Date[1]}
 
@@ -836,8 +839,7 @@ dataframe1<-data.frame(Condition=vector_Condition)
 identical(names_andMCARI1avg[[1]]$Condition, names_andMCARI1avg[[8]]$Condition)
 #[1] TRUE
 
-testr_new<-select_columns(names_andMCARI1avg, "value")%>%
-  cbind.data.frame(dataframe1)
+
 
 colnames(testr_new)<-vector_new
 
