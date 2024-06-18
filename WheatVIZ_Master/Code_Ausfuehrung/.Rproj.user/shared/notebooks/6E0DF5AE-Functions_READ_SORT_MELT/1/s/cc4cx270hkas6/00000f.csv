@@ -1,5 +1,0 @@
-"0","testing_fun<-function(x,z){x%>%slice(grep(z, Plant.Name))}"
-"0","merge_and_select<-function(x){"
-"0","     x%>%merge(metatable, by=""Plant.ID"", all=TRUE)%>%select(- Tray.Info)}"
-"0",""
-"0"," "

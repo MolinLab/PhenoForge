@@ -1,8 +1,0 @@
-"0",""
-"0","list_cutFc<-lapply(list_Fc_Plant, function(x){x%>%select(Measuring.Date, Plant.ID, Fm:Size)%>%mutate(Measuring.Date=x$Measuring.Date[1])})"
-"0",""
-"0","list_cutHc<-lapply(list_Hc_Plant, function(x){x%>%select(Measuring.Date, Plant.ID, ends_with(""avg""), ends_with(""median""))%>%mutate(Measuring.Date=x$Measuring.Date[1])})"
-"0",""
-"0",""
-"0","list_cutKin<-lapply(list_Kinetic, function(x){x%>%select(Measuring.Date, Plant.ID, X50000:X3150000 )%>%mutate(Measuring.Date=x$Measuring.Date[1])})"
-"0",""

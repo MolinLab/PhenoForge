@@ -1,4 +1,0 @@
-"0",""
-"0","list_sd_and_mean<-lapply(list_melt_table, join_and_calc)"
-"2","Fehler: Objekt 'metatable' nicht gefunden
-"
