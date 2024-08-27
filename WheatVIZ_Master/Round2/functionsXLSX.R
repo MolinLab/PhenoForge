@@ -18,7 +18,8 @@ list_extension<-function(x){
   list_Rgb_Color_Plant<-list()
   
   list_allLists<-list()
-  y<-c("Fc_Plant","Kinetic", "Hc_Plant", "Hc_avgSpectrum", "Rgb_Morpho_Plant","Rgb_Color_Plant", "Rgb_Morph_Plant")
+  y<-c("Fc_Plant","Kinetic", "Hc_Plant", "Hc_avgSpectrum", "Rgb_Morpho_Plant",
+       "Rgb_Color_Plant", "Rgb_Morph_Plant")
   for (i in x){
     #y<-c("Fc_Plant","Kinetic", "Hc_Plant", "Hc_avgSpectrum", "Rgb_Morpho_Plant","Rgb_Color_Plant" )
     for (k in y){
@@ -63,7 +64,8 @@ list_extension<-function(x){
     }}
   list_allLists<-list(list_Kinetic, list_Hc_avgSpectrum, 
                       list_Hc_Plant, list_Fc_Plant, list_Rgb_Color_Plant, list_Rgb_Morpho_Plant)
-  names(list_allLists)<-c("list_Kinetic", "list_Hc_avgSpectrum","list_Hc_Plant", "list_Fc_Plant", "list_Rgb_Color_Plant", "list_Rgb_Morpho_Plant")
+  names(list_allLists)<-c("list_Kinetic", "list_Hc_avgSpectrum","list_Hc_Plant", 
+                          "list_Fc_Plant", "list_Rgb_Color_Plant", "list_Rgb_Morpho_Plant")
   return(list_allLists)
 }
 
@@ -157,7 +159,8 @@ return(name_allone)
 }
 
 
-allDatesOneNameMCARI1avg<-function(f){name_allone_MCARI1<-lapply(names_andMCARI1avg, testing_fun, z=f)
+allDatesOneNameMCARI1avg<-function(f){name_allone_MCARI1<-lapply(names_andMCARI1avg, 
+                                                                 testing_fun, z=f)
 name_allone_MCARI1<-do.call("rbind", name_allone_MCARI1)
 return(name_allone_MCARI1)}
 
@@ -189,10 +192,27 @@ make_trayInfo_tables<-function(x){
   return(new_list)}
 
 
+###for a single df () e.g. metatable)
+function_make_trayINfo<-function(i){tray_column<-data.frame(Tray=1)
+#tray_list<-list()
+new_list<-list()
+for(k in i$`Plant ID`){
+  tray_number<-str_extract_all(k, "^\\d+")
+  
+  tray_column[nrow(tray_column)+1,]<-tray_number
+  
+  
+  
+}
+tray_column<-tray_column[-1,]
+#tray_list[[length(tray_list)+1]]<<-tray_column
+#new_list<-list()
+new_list[[length(new_list)+1]]<-i%>%mutate(Tray=tray_column)
+}
 
 build_water_info<-function(x){
   vector_indices_trays<-c()
-  for(k in x$Tray[1:6]){
+  for(k in unique(x$Tray)){
     
     for(t in list_water_trayNumbers){
       if(k%in%t==TRUE){
@@ -205,9 +225,14 @@ build_water_info<-function(x){
   }
   
   dataframe_new<-do.call(cbind.data.frame, water_readings_justValues[,vector_indices_trays])
+  if(length(vector_indices_trays)==1){dataframe_new<-dataframe_new%>%mutate(Mean=dataframe_new[,1],
+                                                                            SD=0)%>%
+      mutate(Date=water_readings_DSOnly$Dates)%>%relocate(Date)}
+    else{
   dataframe_new<-dataframe_new%>%
     mutate(Mean=rowMeans(dataframe_new[,1:ncol(dataframe_new)]))%>%
-    mutate(SD=rowSds(as.matrix(dataframe_new),cols = grep("DS", colnames(dataframe_new))))%>%mutate(Date=water_readings_DSOnly$Dates)%>%relocate(Date)
+    mutate(SD=rowSds(as.matrix(dataframe_new),cols = grep("DS", colnames(dataframe_new))))%>%
+    mutate(Date=water_readings_DSOnly$Dates)%>%relocate(Date)}
   return(dataframe_new)
 }
 
@@ -222,10 +247,13 @@ triplet_to_colour<-function(x){
     
     mystring<-i
     
-    extracted_numbers <- unlist(strsplit(regmatches(mystring, gregexpr("(\\d+(?:,\\d+)*)", mystring))[[1]], ","))
+    extracted_numbers <- unlist(strsplit(regmatches(mystring,
+                                                    gregexpr("(\\d+(?:,\\d+)*)", 
+                                                             mystring))[[1]], ","))
     
     
-    colour<-rgb(extracted_numbers[1],extracted_numbers[2], extracted_numbers[3], maxColorValue = 255)
+    colour<-rgb(extracted_numbers[1],extracted_numbers[2], extracted_numbers[3], 
+                maxColorValue = 255)
     vector_convertedColours[length(vector_convertedColours)+1]<-colour}
   return(vector_convertedColours)
   

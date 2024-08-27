@@ -51,9 +51,9 @@ list_dfs<-list()
 
 list1<-list()
 
-water_readings2<-read_excel("C:/Users/HabisohnC/Desktop/WhaetVIZ_metadata/water_round2.xlsx") #auch dieser Pfad wird in CL übergeben werden
+water_readings2<-read_csv2("C:/Users/HabisohnC/Desktop/Folder_StandDerDinge/Round1/metafiles/water_readings_correctDate_1.CSV") #auch dieser Pfad wird in CL übergeben werden
 
-path_allfiles<-"C:/Users/HabisohnC/Desktop/Round2/xlxs_files"
+path_allfiles<-"C:/Users/HabisohnC/Desktop/Folder_StandDerDinge/Round1/files/NAS_XLSX_Round1/XLSX"
 #dieser Pfad ist variabel, kann in CL oder sonstige als Argument übergeben werden....kommt im  meta-coding, das die pipeline in Gang setzt (bash script?, ...)
 
 for(i in path_allfiles){path<-i
@@ -120,12 +120,12 @@ Table containing meta-data of Genotypes and their replicates ...lapply()
 metatable<-cbind(list_Hc_Plant[[4]]$'Plant ID',list_Hc_Plant[[4]]$'Tray Info', list_Hc_Plant[[4]]$'Plant Name')
 colnames(metatable)<-c("Plant ID", "Tray Info","Plant Name")
 metatable<-as_tibble(metatable)
-metatable<-metatable %>% mutate(Condition = if_else(grepl("\\d*DS", metatable$`Tray Info`), "Drought stress", "Control" ))
+metatable<-metatable %>% mutate(Condition = if_else(grepl("*DS", metatable$`Tray Info`), "Drought stress", "Control" ))
 
 
 placeholdertable<-data.frame(Plant.Name="none")
 
-for(i in metatable$'Plant Name'){modified_string <- gsub("_\\d", "", i)
+for(i in metatable$'Plant Name'){modified_string <- gsub("^.*?_", "", i)
 placeholdertable<-rbind(placeholdertable, modified_string)}
 placeholdertable<-placeholdertable[-1,]
 metatable<-metatable%>%mutate(Genotype=placeholdertable)%>%function_make_trayINfo()
@@ -140,7 +140,7 @@ Table containing water measurements:
 for(i in water_readings2$MeasuringDate){i<-gsub("\\s\\d+.+", "", water_readings2$MeasuringDate)
 water_readings2$MeasuringDate<-i}
 
-water_readings_DSOnly<-water_readings2%>%dplyr::select(contains("DS"))%>%mutate(Dates=water_readings2$MeasuringDate)%>%relocate(Dates)
+water_readings_DSOnly<-water_readings2%>%dplyr::select(contains("DS"))%>%mutate(Date=water_readings2$Date)%>%relocate(Date)
 
 water_readings_DSOnly[,2:ncol(water_readings_DSOnly)]<-sapply(water_readings_DSOnly[,2:ncol(water_readings_DSOnly)], as.numeric)
 
@@ -168,14 +168,15 @@ list_merged_tables[[length(list_merged_tables)+1]]<-merge_table}
 list_merged_tables2<-lapply(list_merged_tables, function(x){x%>%dplyr::select(-'Measuring Date.y')})
 
 #2nd merge
-for(i in 1:length(list_cutHc)){merge_table<-merge(list_merged_tables2[[i]], list_cutKin[[i]], by="Plant ID",all=TRUE) 
+#for(i in 1:length(list_cutHc)){merge_table<-merge(list_merged_tables2[[i]], list_cutKin[[i]], by="Plant ID",all=TRUE) 
 
-list_merged_tables3[[length(list_merged_tables3)+1]]<-merge_table}
+#list_merged_tables3[[length(list_merged_tables3)+1]]<-merge_table}
  
-list_merged_tables3<-lapply(list_merged_tables3, function(x){x%>%dplyr::select(-'Measuring Date')%>%dplyr::rename('Measuring Date'='Measuring Date.x')})
+list_merged_tables2<-lapply(list_merged_tables2, function(x){x%>%#dplyr::select(-'Measuring Date')%>%
+    dplyr::rename('Measuring Date'='Measuring Date.x')})
 
 
-list_melt_table<-lapply(list_merged_tables3, function(x){
+list_melt_table<-lapply(list_merged_tables2, function(x){
   
   x%>% melt(measure.vars=3:ncol(x))%>%mutate_at('value', as.numeric)
 })
@@ -290,7 +291,7 @@ for(i in list_NDVIavg_andNames)
        ggplot(i, aes(x=as.Date(`Measuring Date`, format="%Y-%m-%d"), y=value,group=`Plant Name`, color=Condition))+
      geom_smooth(aes(color=Condition, group=Condition))+#kommt eventuell weg
      ylab("NDVI average")+xlab("Date")+labs(title=i$Genotype[1])+
-      geom_rect(aes(xmin=as.Date("2024-04-17", format="%Y-%m-%d"),xmax=as.Date("2024-05-08", format="%Y-%m-%d"),ymin=-Inf,ymax=Inf),alpha=0.02,fill="lightgrey", color="lightgrey")+
+      #geom_rect(aes(xmin=as.Date("2024-04-17", format="%Y-%m-%d"),xmax=as.Date("2024-05-08", format="%Y-%m-%d"),ymin=-Inf,ymax=Inf),alpha=0.02,fill="lightgrey", color="lightgrey")+
      geom_point(size=1.5)+theme_bw(base_size = 10)+
    scale_color_manual(values = c("Control"="turquoise3", 
                                                 "Drought stress"="coral"))+
@@ -308,7 +309,7 @@ for(i in list_Size_andNames){list_plots_Size[[length(list_plots_Size)+1]]<-
   theme_bw(base_size = 10)+
   geom_smooth(aes(color=Condition, group=Condition))+#kommt eventuell weg
   ylab("Size")+xlab("Date")+labs(title=i$Genotype[1])+
-   geom_rect(aes(xmin=as.Date("2024-04-17", format="%Y-%m-%d"),xmax=as.Date("2024-05-08", format="%Y-%m-%d"),ymin=-Inf,ymax=Inf),alpha=0.02,fill="lightgrey", color="lightgrey")+
+   #geom_rect(aes(xmin=as.Date("2024-04-17", format="%Y-%m-%d"),xmax=as.Date("2024-05-08", format="%Y-%m-%d"),ymin=-Inf,ymax=Inf),alpha=0.02,fill="lightgrey", color="lightgrey")+
      geom_point(size=1.5)+scale_color_manual(values = c("Control"="turquoise3", 
                                                           "Drought stress"="coral"))+
   theme(axis.text.x = element_text(angle=75, hjust=1.2),plot.title = element_text(size=16),
@@ -326,7 +327,7 @@ for(i in list_PSRIavg_andNames){list_plot_PSRIavg[[length(list_plot_PSRIavg)+1]]
   theme_bw(base_size = 10)+
 geom_smooth(aes(color=Condition, group=Condition))+
   ylab("PSRI average")+xlab("Date")+labs(title=i$Genotype[1])+
-   geom_rect(aes(xmin=as.Date("2024-04-17", format="%Y-%m-%d"),xmax=as.Date("2024-05-08", format="%Y-%m-%d"),ymin=-Inf,ymax=Inf),alpha=0.02,fill="lightgrey", color="lightgrey")+
+   #geom_rect(aes(xmin=as.Date("2024-04-17", format="%Y-%m-%d"),xmax=as.Date("2024-05-08", format="%Y-%m-%d"),ymin=-Inf,ymax=Inf),alpha=0.02,fill="lightgrey", color="lightgrey")+
      geom_point(size=1.5)+
   scale_color_manual(values = c("Control"="turquoise3", 
               "Drought stress"="coral"))+
@@ -344,7 +345,7 @@ for(i in list_QY_max_andNames){list_plot_QYMax[[length(list_plot_QYMax)+1]]<-
   theme_bw(base_size = 10)+
   geom_smooth(aes(color=Condition, group=Condition))+
   ylab("QY_max")+xlab("Date")+labs(title=i$Genotype[1])+
-  geom_rect(aes(xmin=as.Date("2024-04-17", format="%Y-%m-%d"),xmax=as.Date("2024-05-08", format="%Y-%m-%d"),ymin=-Inf,ymax=Inf),alpha=0.02,fill="lightgrey", color="lightgrey")+
+  #geom_rect(aes(xmin=as.Date("2024-04-17", format="%Y-%m-%d"),xmax=as.Date("2024-05-08", format="%Y-%m-%d"),ymin=-Inf,ymax=Inf),alpha=0.02,fill="lightgrey", color="lightgrey")+
      geom_point(size=1.5)+
   scale_color_manual(values = c("Control"="turquoise3", 
                                 "Drought stress"="coral"))+
@@ -359,7 +360,7 @@ for(i in list_QY_max_andNames){list_plot_QYMax[[length(list_plot_QYMax)+1]]<-
 for(i in list_MCARI1avg_andNmaes){list_plots_MCARI1[[length(list_plots_MCARI1)+1]]<-
   ggplot(i, aes(x=as.Date(`Measuring Date`, format="%Y-%m-%d"), y=value,group=`Plant Name`, color=Condition))+
   ylab("MCARI1 average")+xlab("Date")+labs(title=i$Genotype[1])+
-   geom_rect(aes(xmin=as.Date("2024-04-17", format="%Y-%m-%d"),xmax=as.Date("2024-05-08", format="%Y-%m-%d"),ymin=-Inf,ymax=Inf),alpha=0.02,fill="lightgrey", color="lightgrey")+
+  # geom_rect(aes(xmin=as.Date("2024-04-17", format="%Y-%m-%d"),xmax=as.Date("2024-05-08", format="%Y-%m-%d"),ymin=-Inf,ymax=Inf),alpha=0.02,fill="lightgrey", color="lightgrey")+
      geom_point(size=1.5)+
   theme_bw(base_size = 10)+
   geom_smooth(aes(color=Condition, group=Condition))+
@@ -447,7 +448,7 @@ for(i in 1:length(list_mean_sd_Size)){
 ```
 
 ```{r, warning=FALSE, message=FALSE}
-path_plotaverage<-"C:/Users/HabisohnC/Desktop/Round2/WheatVIZ_Round2/plots_round2/"
+path_plotaverage<-"C:/Users/HabisohnC/Desktop/Folder_StandDerDinge/Round1/plots_R1"
 
 
 select_indices(list_sd_and_mean,"MCARI1-avg")%>%bind_rows()%>%ggplot(aes(x=as.Date(Date, format="%Y-%m-%d"),y=Mean,color=Condition))+
@@ -635,8 +636,6 @@ for(i in 1:length(list_mean_sd_PRIavg)){
 source("water.R", local = knitr::knit_global())
 ```
 
-Hinweis: um die NAs hier werde ich mich noch kümmern (ad plots 2nd Round;), ich weiss wo sie herkommen und wie ich sie los werde, hatte nur noch keine Zeit dafür :)
-
 ```{r, warning=FALSE, message=FALSE}
 QYmax_allDates<-do.call("rbind", names_andQY_max)
 NDVI_allDates<-do.call("rbind", names_andNDVIavg)
@@ -657,7 +656,7 @@ ggplot(QYmax_allDates, aes(x=as.Date(`Measuring Date`, format="%Y-%m-%d"), y=val
   scale_color_manual(values = c("Control"="turquoise3", 
                                 "Drought stress"="coral"))+
   theme(axis.text.x = element_text(angle=90, vjust=0.5, size=9))+
-  geom_smooth(method="lm",aes(color=Condition, group=Condition))+geom_point()
+  geom_smooth(aes(color=Condition, group=Condition))+geom_point()
 
 ggsave(filename = paste0(path_plotaverage,"QYMax_allGenotypes.pdf"))
 ggsave(filename = paste0(path_plotaverage,"QYMax_allGenotypes.png"))
@@ -673,7 +672,7 @@ ggplot(NDVI_allDates, aes(x=as.Date(`Measuring Date`, format="%Y-%m-%d"), y=valu
   scale_color_manual(values = c("Control"="turquoise3", 
                                 "Drought stress"="coral"))+
   theme(axis.text.x = element_text(angle=90, vjust=0.5, size=9))+
-  geom_smooth(method="lm",aes(color=Condition, group=Condition))+geom_point()
+  geom_smooth(aes(color=Condition, group=Condition))+geom_point()
 
 ggsave(filename = paste0(path_plotaverage,"NDVI_allGenotypes.pdf"))
 ggsave(filename = paste0(path_plotaverage,"NDVI_allGenotypes.png"))
@@ -689,7 +688,7 @@ ggplot(MCARI_allDates, aes(x=as.Date(`Measuring Date`, format="%Y-%m-%d"), y=val
   scale_color_manual(values = c("Control"="turquoise3", 
                                 "Drought stress"="coral"))+
   theme(axis.text.x = element_text(angle=90, vjust=0.5, size=9))+
-  geom_smooth(method="lm",aes(color=Condition, group=Condition))+geom_point()
+  geom_smooth(aes(color=Condition, group=Condition))+geom_point()
 
 ggsave(filename = paste0(path_plotaverage,"MCARI_allGenotypes.pdf"))
 ggsave(filename = paste0(path_plotaverage,"MCARI_allGenotypes.png"))
@@ -702,12 +701,12 @@ ggplot(PRIaverage_allDates, aes(x=as.Date(`Measuring Date`, format="%Y-%m-%d"), 
     scale_color_manual(values = c("Control"="turquoise3", 
                                   "Drought stress"="coral"))+
     theme(axis.text.x = element_text(angle=90, vjust=0.5, size=9))+
-    geom_smooth(method="lm",aes(color=Condition, group=Condition))+geom_point()
+    geom_smooth(aes(color=Condition, group=Condition))+geom_point()
 ```
 
 ```{r, warning=FALSE, message=FALSE}
 for(i in water_tables_all20Genotypes){list_plots_WaterGenotype_QYMax[[length(list_plots_WaterGenotype_QYMax)+1]]<-
- ggplot(i[is.element(i$Date, list_QY_max_andNames[[1]]$`Measuring Date`),],
+ ggplot(i[is.element(i$Date, as.Date(list_QY_max_andNames[[1]]$`Measuring Date`)),],
         aes(x=as.Date(Date, format="%Y-%m-%d"),y=Mean))+xlab("Date")+
        scale_y_continuous(name="Mean water potential [kPa]")+
   #geom_rect(aes(xmin=as.Date("2024-02-12", format="%Y-%m-%d"),xmax=as.Date("2024-03-01", format="%Y-%m-%d"),ymin=-Inf,ymax=Inf),fill="lightgrey",alpha=0.02,color="lightgrey")+
@@ -722,7 +721,7 @@ for(i in water_tables_all20Genotypes){list_plots_WaterGenotype_QYMax[[length(lis
 
 
 for(i in water_tables_all20Genotypes){list_plots_WaterGenotype_NDVI[[length(list_plots_WaterGenotype_NDVI)+1]]<-
-  ggplot(i[is.element(i$Date, list_NDVIavg_andNames[[1]]$`Measuring Date`),],
+  ggplot(i[is.element(i$Date,as.Date(list_NDVIavg_andNames[[1]]$`Measuring Date`)),],
          aes(x=as.Date(Date, format="%Y-%m-%d"),y=Mean))+xlab("Date")+
   scale_y_continuous(name="Mean water potential [kPa]")+
   #geom_rect(aes(xmin=as.Date("2024-02-12", format="%Y-%m-%d"),xmax=as.Date("2024-03-01", format="%Y-%m-%d"),ymin=-Inf,ymax=Inf),fill="lightgrey",alpha=0.02,color="lightgrey")+
@@ -735,7 +734,7 @@ for(i in water_tables_all20Genotypes){list_plots_WaterGenotype_NDVI[[length(list
 
 
 for(i in water_tables_all20Genotypes){list_plots_WaterGenotype_PSRI[[length(list_plots_WaterGenotype_PSRI)+1]]<-
-  ggplot(i[is.element(i$Date, list_PSRIavg_andNames[[1]]$`Measuring Date`),],
+  ggplot(i[is.element(i$Date, as.Date(list_QY_max_andNames[[1]]$`Measuring Date`)),],
          aes(x=as.Date(Date, format="%Y-%m-%d"),y=Mean))+xlab("Date")+
   scale_y_continuous(name="Mean water potential [kPa]")+
   theme_bw(base_size = 10)+
@@ -748,7 +747,7 @@ for(i in water_tables_all20Genotypes){list_plots_WaterGenotype_PSRI[[length(list
 
 
 for(i in water_tables_all20Genotypes){list_plots_WaterGenotype_MCARI1[[length(list_plots_WaterGenotype_MCARI1)+1]]<-
-  ggplot(i[is.element(i$Date, list_MCARI1avg_andNmaes[[1]]$`Measuring Date`),],
+  ggplot(i[is.element(i$Date, as.Date(list_QY_max_andNames[[1]]$`Measuring Date`)),],
          aes(x=as.Date(Date, format="%Y-%m-%d"),y=Mean))+xlab("Date")+
   scale_y_continuous(name="Mean water potential [kPa]")+
   #geom_rect(aes(xmin=as.Date("2024-02-12", format="%Y-%m-%d"),xmax=as.Date("2024-03-01", format="%Y-%m-%d"),ymin=-Inf,ymax=Inf),fill="lightgrey",alpha=0.02,color="lightgrey")+
