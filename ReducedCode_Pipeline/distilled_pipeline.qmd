@@ -531,9 +531,9 @@ path_plotsDownstream<-"C:/Users/HabisohnC/Desktop/DigAB/plots/DownstreamStatisti
  testrunscatter<-lapply(CamData_Bonitur_TG, function(i){
    column_names<-colnames(i)
    
-   if(str_contains(column_names, "QY_max")==TRUE){
+   if(str_contains(column_names, "QY_max")==TRUE & str_contains(column_names, "LeafNumber")==TRUE){
    
-   newdf<-dplyr::select(i, Condition, ends_with("avg"), QY_max, TG)
+   newdf<-dplyr::select(i, Condition, ends_with("avg"), QY_max, LeafNumber, TillerNumber,TG)
    ploti<-ggpairs(newdf, mapping=ggplot2::aes(colour=Condition),
         lower=list(continous=wrap("smooth", alpha=0.05, size=0.1)),
         diag = list(discrete="barDiag",continuous = wrap("densityDiag", alpha=0.5 )),
@@ -544,93 +544,130 @@ path_plotsDownstream<-"C:/Users/HabisohnC/Desktop/DigAB/plots/DownstreamStatisti
     scale_fill_manual(values = c("Control"="turquoise3", 
                                  "Drought stress"="coral"))
 
- #ggsave(filename = paste0(path_plotsDownstream2,paste0(i$`Measuring Date`[1]),".png"), width=20, height=20)
+# ggsave(filename = paste0(path_plotsDownstream2,paste0(i$`Measuring Date`[1]),".png"), width=20, height=20)
  return(ploti)}
    
    else if(str_contains(column_names, "LeafNumber")==TRUE){
-     pi<-dplyr::select(x, Condition, ends_with("avg"), LeafNumber:TG)
+     pi<-dplyr::select(i, Condition, ends_with("avg"), LeafNumber, TillerNumber,TG)
   piplot<-ggpairs(pi, mapping=ggplot2::aes(colour=Condition),
                                                lower=list(continous=wrap("smooth", alpha=0.05, size=0.1)),
                                                diag = list(discrete="barDiag",continuous = wrap("densityDiag", alpha=0.5 )),
-                                               cardinality_threshold = 40, title=paste0(x$Genotype[1]," Indices,Bonitur,Yield 28.02."), legend=1)+
+                                               cardinality_threshold = 40, title=paste0("Indices,Bonitur,", i$`Measuring Date`[1]), legend=1)+
     theme(panel.grid.major = element_blank())+
     scale_color_manual(values = c("Control"="turquoise3", 
                                   "Drought stress"="coral"))+
     scale_fill_manual(values = c("Control"="turquoise3", 
                                  "Drought stress"="coral"))
   return(piplot)}
-  
-   }
-   
+   else{
+      pim<-dplyr::select(i, Condition, ends_with("avg"), TG)
+  pimlot<-ggpairs(pim, mapping=ggplot2::aes(colour=Condition),
+                                               lower=list(continous=wrap("smooth", alpha=0.05, size=0.1)),
+                                               diag = list(discrete="barDiag",continuous = wrap("densityDiag", alpha=0.5 )),
+                                               cardinality_threshold = 40, title=paste0("Indices,Bonitur,", i$`Measuring Date`[1]), legend=1)+
+    theme(panel.grid.major = element_blank())+
+    scale_color_manual(values = c("Control"="turquoise3", 
+                                  "Drought stress"="coral"))+
+    scale_fill_manual(values = c("Control"="turquoise3", 
+                                 "Drought stress"="coral"))
+  return(pimlot)}
+ }
  )
  
- #lapply(testrunscatter, function(x){
- # ggsave(x,filename = paste0(path_plotsDownstream,paste0(x$title ,"_2nd.png")), width=20, height=20)
-#})
+ lapply(testrunscatter, function(x){
+ ggsave(x,filename = paste0(path_plotsDownstream,paste0(x$title ,".png")), width=20, height=20)
+})
 
  
 ```
 
 ```{r}
-
+#alle PCAs ist nach Datum getrennt!!!!
 
 #liste der wide dfs, muss aber noch constant value columns entferne, damit die PCA bei allen input dfs läuft, diese nur bei numeric columns, sieht in code gegossen dann so aus:
-list_PCA_wideDFs<-lapply(Pattern1_list, function(x){
-  gh<-dplyr::select(x, where(is.numeric))
+list_PCA_wideDFs_all<-lapply(CamData_Bonitur_TG, function(x){
+  gh<-dplyr::select(x,where(is.numeric))
   y<-gh[,which(apply(gh, 2, var)!=0)]
    p<-prcomp(dplyr::select(y, where(is.numeric)), scale.=TRUE)
-  return(p)
+  p$date<-x$`Measuring Date`[1]
+   return(p)
+  
+})
+  
+
+ 
+ list_biplots_wideDFs_all<-lapply(list_PCA_wideDFs_all, function(biplotting){ggbiplot::ggbiplot(biplotting,labels = DS_list_Pattern1[[1]]$Genotype, groups = DS_list_Pattern1[[1]]$Genotype)+labs(title=paste0("PCA biplot", biplotting$date))})
+ 
+ 
+lapply(list_biplots_wideDFs_all, function(pi){
+ ggsave(pi,filename = paste0(path_plotsDownstream,paste0(pi$labels$title,"_all.png")), width=20, height=20)
+})
+
+#alle Indices (HC, FC, RGB), if available: Boni, TG
+
+list_PCA_wideDFs_noRGB<-lapply(CamData_Bonitur_TG, function(x){
+  gh<-dplyr::select(x,-starts_with("#"),where(is.numeric))
+  y<-gh[,which(apply(gh, 2, var)!=0)]
+   p<-prcomp(dplyr::select(y, where(is.numeric)), scale.=TRUE)
+  p$date<-x$`Measuring Date`[1]
+   return(p)
   
 })
 
-list_biplots_wideDFs<-lapply(list_PCA_wideDFs, ggbiplot::ggbiplot)
-  
 
 ################
-#auftrennen der dfs nach Condition: hier DS
-
-
- DS_list_Pattern1<-lapply(Pattern1_list, function(g){filter(g, Condition=="Drought stress")})
+#auftrennen der dfs nach Condition: hier DS für alle Daten
  
- 
- 
- list_PCA_wideDFs_DS_Date<-lapply(DS_list_Pattern1, function(x){
-  gh<-dplyr::select(x, where(is.numeric))
+ list_PCA_wideDFs_DS<-lapply(CamData_Bonitur_TG, function(x){
+  gh<-x%>%dplyr::filter(Condition=="Drought stress")%>%dplyr::select(where(is.numeric))
   y<-gh[,which(apply(gh, 2, var)!=0)]
    p<-prcomp(dplyr::select(y, where(is.numeric)), scale.=TRUE)
    p$date<-x$`Measuring Date`[1]
+   p$condition<-x$Condition[1]
   return(p)
   
 })
  
  
- list_biplots_wideDFs_DS_Date<-lapply(list_PCA_wideDFs_DS_Date, function(biplotting){ggbiplot::ggbiplot(biplotting,labels = DS_list_Pattern1[[1]]$Genotype, groups = DS_list_Pattern1[[1]]$Genotype)+labs(title=paste0("PCA biplot ", biplotting$date))})
+ list_biplots_wideDFs_DS<-lapply(list_PCA_wideDFs_DS_Date, function(biplotting){ggbiplot::ggbiplot(biplotting,labels = DS_list_Pattern1[[1]]$Genotype, groups = DS_list_Pattern1[[1]]$Genotype)+labs(title=paste0("PCA biplot Drought Stress ", biplotting$date))})
  
  
-# lapply(list_biplots_wideDFs_DS_Date, function(pi){
- #  ggsave(pi,filename = paste0(path_plotsDownstream,paste0(pi$labels$title,".png")), width=20, height=20)
-# })
+lapply(list_biplots_wideDFs_DS, function(pi){
+ ggsave(pi,filename = paste0(path_plotsDownstream,paste0(pi$labels$title,"_DS.png")), width=20, height=20)
+})
 ```
 
 ```{r}
-####### k means clustering ---loop TODO
-DS_wide2802<-DS_list_Pattern1$wide_all2802
-pinky<-dplyr::select(DS_wide2802, where(is.numeric))
+#kmeans in a loop...
 
-kmeans_2802<-kmeans(pinky, centers=4, nstart=20 )
+kmeans_lists<-lapply(CamData_Bonitur_TG, function(xix){
+  
+  if(anyNA(xix)==FALSE){
+  list_kmeans<-list()
+  
+  
+  km_frame<-xix%>%dplyr::select(where(is.numeric))
+  
+  kmeans_item<-kmeans(na.omit(km_frame), centers=3, nstart=20)
+
+  
+xix_plot<-autoplot(kmeans_item, data=xix,label = TRUE, label.label = xix$Genotype, label.size=3)+labs(title=paste0(xix$`Measuring Date`[1],", 3-means clustering") )
+
  
+ggsave(filename=paste0(path_plotsDownstream, paste0(xix$`Measuring Date`[1]), "_3_cluster.png"))
 
-DS_wide2802$cluster<-kmeans_2802$cluster
+ 
+sil_plot<-silhouette(kmeans_item$cluster, dist(xix))
+fviz_silhouette(sil_plot)
 
-autoplot(kmeans_2802, data=pinky,label = TRUE, label.label = DS_list_Pattern1$wide_all2802$Genotype, label.size=3)+labs(title="3-means clustering 28.02.Gruppe DS Bonitur, Indices, Yield") 
+ ggsave(filename=paste0(path_plotsDownstream, paste0(xix$`Measuring Date`[1]), "silhouette.png"))
 
-ggsave(filename =paste0(path_plotsDownstream,"clusters1.png"),width=10, height=10 )
+ list_kmeans<-append(list_kmeans, kmeans_item)
+ 
+  return(list_kmeans)}
+})
 
-sil <- silhouette(kmeans_2802$cluster, dist(DS_list_Pattern1$wide_all2802))
 
-fviz_silhouette(sil)
-
-ggsave(filename =paste0(path_plotsDownstream,"silhouette1.png"),width=15, height=15 )
 ```
 
 ```{r}
