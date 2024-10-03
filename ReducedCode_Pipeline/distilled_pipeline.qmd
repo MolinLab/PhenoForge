@@ -423,7 +423,7 @@ ggsave(filename=paste0(path_plotaverage, paste0(names(water_tables_all20Genotype
 
 source("manualFiles.R",local = knitr::knit_global())#source script erstellt den dataframe den ich für die statistik verwende
 source("MatrixTranspo_forRF.R", local = knitr::knit_global() )
-source("RF_forAllCases_Dates_Columns.R", local = knitr::knit_global() )
+source("RF_forAllCases_DatesColumns.R", local = knitr::knit_global() )
 
 
 library(corrr)
@@ -441,6 +441,8 @@ library(ade4)
 library(magrittr)
 library(cluster)
 ```
+
+## *Indices over yield plots*
 
 ```{r}
 #plotting all indices over yield of genotypes (x-axis), plots per timepoint
@@ -477,7 +479,7 @@ Timepoints_IndexOVERyield_plots<-lapply(Gruppen_timepoints_melt, function(p){
   )+
   labs(x = "TG Values", y = "Index Values",
        title = paste0("Plot of TG Values vs. Index Values ", p$Date_TG[1])) +
-  theme(axis.text.x = element_text(angle=45, hjust=1.2, vjust=2), axis.text=element_text(size=13), 
+  theme(axis.text.x = element_text(angle=45, hjust=1), axis.text=element_text(size=13), 
         axis.ticks.length.x=unit(1,"cm"))+
   guides(x=guide_axis(n.dodge = 2))
   
@@ -489,95 +491,47 @@ Timepoints_IndexOVERyield_plots<-lapply(Gruppen_timepoints_melt, function(p){
 
 ```{r}
 
-#Zusammenfügen der dfs wide format(list_cutDFs)
-#das ist eine extrem ungute Aufgabe, es sollte eher "Zusammenstöpseln heissen, denn die Durchgänge haben eigentlich alle ein andres Datum....
+#trennen des grossen wide dfs "Genotype_allHC_Indexcolumns" nach Datum und individuelles Zusammenfügen basierend auf den vorhandenen Dataframes Dates mit Fc, RGB Boni data -> für date-specific PCAs, kmeans, etc
+
+new_split_dataframe<-split_dataframe(Genotype_allHC_Indexcolumns, "Measuring Date")
 
 
-#my_df <- mutate_if(my_df, is.character, as.factor)
-
-list_cutHc_trimmed<-list_cutHc[-6]
-list_cutFc_trimmed<-list_cutFc[-3]
-
-list_numbers<-c(1:length(list_cutFc_trimmed))
-
-doesThatWork<-lapply(list_numbers, function(x){inner_join(list_cutHc_trimmed[[x]], list_cutFc_trimmed[[x]], by="Plant ID")%>%mutate(`Measuring Date.y`=NULL)%>%dplyr::rename("Measuring Date"="Measuring Date.x")})
-
-###frickless verbindet die RGB mit den HCFC dfs, da ,wo das Datum stimmt
+ wideDFs_Datesplit_joined<-lapply(new_split_dataframe, fuse_me)
+ 
+   wideDFs_Datesplit_joined_unlisted<-unlist(wideDFs_Datesplit_joined, recursive = FALSE)
+ 
+DFs_joined_allCamData<-lapply(wideDFs_Datesplit_joined_unlisted, fuse_me2)
+DFS_joined_allCamData_unlisted<-unlist(DFs_joined_allCamData, recursive = FALSE)
+   
 
 
-####################################diese Funktion läuft, aber sie stellt mir nur die gejoinedten dfs in die Liste, ich will ja auch die, die ohne RGB values sind drin ahben....muss ich nich knobeln...
-#######################################
+bonitur_allCamdata_list<-lapply(DFS_joined_allCamData_unlisted, fuse_me_Bonitur, Bonitur_growthCHamber)
 
+ boni_unlisted<-unlist(bonitur_allCamdata_list, recursive = FALSE)
+ 
+CamData_Bonitur<-lapply(boni_unlisted, function(z){
+  checking_content<-colnames(z)
+  if(str_contains(checking_content, "LeafNumber")==TRUE){
+    zi<-z%>%dplyr::select(-Tray, -GenotypeNr, -Condition, -GeneralImpression)
+    return(zi)}
+  else{return(z)}
+})
 
-##hier sind wide_formats aller available data für jeweiliges Datum:
-#hc, fc, RGB, bonitur in kombination oder alleine....
-
-#ACHTUNG: ich muss die columns der dataframes noch ordnen, bei manchen ist die numerische kolonne unterbrochen... muss ich nohc fixen, aber morgen...
-
-#hc,fc,rgb
-wide_all0702<-inner_join(list_cutHc[[1]], list_cutFc[[1]], by="Plant ID")%>%mutate(`Measuring Date.y`=NULL)%>%dplyr::rename("Measuring Date"="Measuring Date.x")%>%inner_join(list_cutRGB_C_hexcodes[[1]], by="Plant ID")%>%mutate(`Measuring Date.y`=NULL)%>%dplyr::rename("Measuring Date"="Measuring Date.x")%>%inner_join(weizenernte, by="Plant ID")%>%dplyr::select(-Tray)%>%inner_join(metatable_slim, by="Plant ID")%>%relocate(Genotype, Condition, .after="Plant ID")
-
-
-
-#hc,fc,rgb, bonitur
-wide_all0902<-doesThatWork[[2]]%>%inner_join(list_cutRGB_C_hexcodes[[2]], by="Plant ID")%>%mutate(`Measuring Date.y`=NULL)%>%dplyr::rename("Measuring Date"="Measuring Date.x")%>%inner_join(Bonitur_growthCHamber[which(Bonitur_growthCHamber$`Measuring Date`=="2024-02-09"),], by=c("Plant ID", "Measuring Date"))%>%inner_join(weizenernte, by="Plant ID")%>%dplyr::select(-GenotypeNr,-Tray.x,-Tray.y, -GeneralImpression)%>%relocate(Genotype, .after = `Plant ID`)%>%relocate(Condition, .after = Genotype)
-
-
-wide_all1202<-inner_join(list_cutFc[[3]], list_cutRGB_C_hexcodes[[3]], by="Plant ID", "Measuring Date")%>%dplyr::select(-`Measuring Date.y`)%>%dplyr::rename("Measuring Date"="Measuring Date.x")%>%inner_join(metatable_slim, by="Plant ID")%>%relocate(Genotype, Condition, .after="Plant ID")
-
-wide_all1402<-doesThatWork[[3]]%>%inner_join(list_cutRGB_C_hexcodes[[4]], by="Plant ID")%>%mutate(`Measuring Date.y`=NULL)%>%dplyr::rename("Measuring Date"="Measuring Date.x")%>%inner_join(Bonitur_growthCHamber[which(Bonitur_growthCHamber$`Measuring Date`=="2024-02-14"),], by=c("Plant ID", "Measuring Date"))%>%inner_join(weizenernte, by="Plant ID")%>%dplyr::select(-GenotypeNr, -Tray.x, -Tray.y, -GeneralImpression)%>%dplyr::relocate(Genotype, Condition, .after=`Plant ID`)
-
-
-
-
-wide_all2102<-doesThatWork[[4]]%>%inner_join(list_cutRGB_C_hexcodes[[5]], by="Plant ID")%>%mutate(`Measuring Date.y`=NULL)%>%dplyr::rename("Measuring Date"="Measuring Date.x")%>%inner_join(Bonitur_growthCHamber[which(Bonitur_growthCHamber$`Measuring Date`=="2024-02-23"),], by=c("Plant ID"))%>%mutate(`Measuring Date.y`=NULL)%>%dplyr::rename("Measuring Date"="Measuring Date.x")%>%inner_join(weizenernte, by="Plant ID")%>%dplyr::select(-Tray.x, -Tray.y, -GenotypeNr,-GeneralImpression)%>%relocate(Genotype, Condition, .after=`Plant ID`)
-
-
-
-wide_all2302<-doesThatWork[[5]]%>%inner_join(metatable_slim, by="Plant ID")%>%relocate(Genotype, Condition, .after="Plant ID")%>%inner_join(weizenernte, by="Plant ID")%>%dplyr::select(-Tray)
-#wide_all2602<-doesThatWork[[6]]
-
-wide_all2602<-list_cutHc[[6]]%>%inner_join(metatable_slim, by="Plant ID")%>%relocate(Genotype, Condition, .after="Plant ID")
-
-wide_all2802<-doesThatWork[[6]]%>%inner_join(list_cutRGB_C_hexcodes[[6]], by="Plant ID")%>%mutate(`Measuring Date.y`=NULL)%>%dplyr::rename("Measuring Date"="Measuring Date.x")%>%inner_join(Bonitur_growthCHamber[which(Bonitur_growthCHamber$`Measuring Date`=="2024-02-23"),], by=c("Plant ID"))%>%mutate(`Measuring Date.y`=NULL)%>%dplyr::rename("Measuring Date"="Measuring Date.x")%>%inner_join(weizenernte, by="Plant ID")%>%relocate(Genotype, Condition, .after="Plant ID")%>%dplyr::select(-Tray.y,-Tray.x,-GenotypeNr, -GeneralImpression)
-
-wide_all0103<-doesThatWork[[7]]%>%inner_join(metatable_slim, by="Plant ID")%>%relocate(Genotype, Condition, .after="Plant ID")%>%inner_join(weizenernte, by="Plant ID")%>%dplyr::select(-Tray)
-
-wide_all0403<-doesThatWork[[8]]%>%inner_join(metatable_slim, by="Plant ID")%>%relocate(Genotype, Condition, .after="Plant ID")%>%inner_join(weizenernte, by="Plant ID")%>%dplyr::select(-Tray)
-
-wide_all0603<-doesThatWork[[9]]%>%inner_join(list_cutRGB_C_hexcodes[[7]], by="Plant ID")%>%mutate(`Measuring Date.y`=NULL)%>%dplyr::rename("Measuring Date"="Measuring Date.x")%>%inner_join(weizenernte, by="Plant ID")%>%dplyr::select(-Tray)%>%inner_join(metatable_slim, by="Plant ID")%>%relocate(Genotype, Condition, .after="Plant ID")
-
-
-wide_all0803<-doesThatWork[[10]]%>%inner_join(metatable_slim, by="Plant ID")%>%relocate(Genotype, Condition, .after="Plant ID")%>%inner_join(weizenernte, by="Plant ID")%>%dplyr::select(-Tray)
-
-wide_all1103<- doesThatWork[[11]]%>%inner_join(metatable_slim, by="Plant ID")%>%relocate(Genotype, Condition, .after="Plant ID")%>%inner_join(weizenernte, by="Plant ID")%>%dplyr::select(-Tray)
-
-wide_all1303<-doesThatWork[[12]]%>%inner_join(list_cutRGB_C_hexcodes[[8]], by="Plant ID")%>%mutate(`Measuring Date.y`=NULL)%>%dplyr::rename("Measuring Date"="Measuring Date.x")%>%inner_join(Bonitur_growthCHamber[which(Bonitur_growthCHamber$`Measuring Date`=="2024-03-13"),], by=c("Plant ID", "Measuring Date"))%>%inner_join(weizenernte, by="Plant ID")%>%relocate(Genotype, Condition, .after="Plant ID")%>%dplyr::select(-Tray.y, -Tray.x, -GeneralImpression, -GenotypeNr)
-
-
-wide_all1503<-doesThatWork[[13]]%>%inner_join(metatable_slim, by="Plant ID")%>%relocate(Genotype, Condition, .after="Plant ID")%>%inner_join(weizenernte, by="Plant ID")%>%dplyr::select(-Tray)
-
-wide_all1803<-doesThatWork[[14]]%>%inner_join(metatable_slim, by="Plant ID")%>%relocate(Genotype, Condition, .after="Plant ID")%>%inner_join(weizenernte, by="Plant ID")%>%dplyr::select(-Tray)
-
-
-Pattern1<-grep("wide",names(.GlobalEnv),value=TRUE)
-Pattern1_list<-do.call("list",mget(Pattern1))
-#mit diesen wide tables kann ich alle PCAs, lms, kmeans clustering etc machen....
-#was brauche ich für die scatterplots...auch wide glaub ich--JA
-
+CamData_Bonitur_TG<-lapply(CamData_Bonitur, function(p){p%>%inner_join(metatable_slim,by=c("Plant ID", "Genotype"))%>%dplyr::relocate(Condition, .after = `Measuring Date`)})
 ```
 
 ```{r}
 
 path_plotsDownstream<-"C:/Users/HabisohnC/Desktop/DigAB/plots/DownstreamStatistics_plots/"
 
- ################### looping
- #liste der wide_dfs, die HC UND FC UND Yield haben: != list_Pattern1 !! NOTE
- list_scatterplotting<-list(wide_all0702,wide_all0902, wide_all1402, wide_all2102, wide_all2302, wide_all2802, wide_all0103, wide_all0403, wide_all0603, wide_all0803, wide_all1303, wide_all1503, wide_all1803)
+ 
  
  
 #######der loop läuft noch nicht :((((.......))))
- testrunscatter<-lapply(list_scatterplotting, function(i){
+ testrunscatter<-lapply(CamData_Bonitur_TG, function(i){
+   column_names<-colnames(i)
+   
+   if(str_contains(column_names, "QY_max")==TRUE){
    
    newdf<-dplyr::select(i, Condition, ends_with("avg"), QY_max, TG)
    ploti<-ggpairs(newdf, mapping=ggplot2::aes(colour=Condition),
@@ -591,28 +545,10 @@ path_plotsDownstream<-"C:/Users/HabisohnC/Desktop/DigAB/plots/DownstreamStatisti
                                  "Drought stress"="coral"))
 
  #ggsave(filename = paste0(path_plotsDownstream2,paste0(i$`Measuring Date`[1]),".png"), width=20, height=20)
- return(ploti)
+ return(ploti)}
    
- })
- 
- 
- 
- 
- 
-####loop over Genotypes für den 2802
- 
-path_plotsDownstream<-"C:/Users/HabisohnC/Desktop/DigAB/plots/DownstreamStatistics_plots/testplots/"
-
-datasets_Genotypes<-lapply(list_of_names, function(x){result<-dplyr::filter(wide_all2802, Genotype==x)
-return(result)})
-names(datasets_Genotypes)<-list_of_names
-
-datasets_Genotypes<-datasets_Genotypes[-c(7,13)]###schmeissen mir meinen loop auf, weil da irgendwas nicht passt drin...
-
-
-list_Genotypes_2802<-lapply(datasets_Genotypes, function(x){
-  
-  pi<-dplyr::select(x, Condition, ends_with("avg"), QY_max, LeafNumber:TG)
+   else if(str_contains(column_names, "LeafNumber")==TRUE){
+     pi<-dplyr::select(x, Condition, ends_with("avg"), LeafNumber:TG)
   piplot<-ggpairs(pi, mapping=ggplot2::aes(colour=Condition),
                                                lower=list(continous=wrap("smooth", alpha=0.05, size=0.1)),
                                                diag = list(discrete="barDiag",continuous = wrap("densityDiag", alpha=0.5 )),
@@ -622,18 +558,17 @@ list_Genotypes_2802<-lapply(datasets_Genotypes, function(x){
                                   "Drought stress"="coral"))+
     scale_fill_manual(values = c("Control"="turquoise3", 
                                  "Drought stress"="coral"))
-  return(piplot)
+  return(piplot)}
   
-  
-  })
-
-#lapply(list_Genotypes_2802, function(x){
+   }
+   
+ )
+ 
+ #lapply(testrunscatter, function(x){
  # ggsave(x,filename = paste0(path_plotsDownstream,paste0(x$title ,"_2nd.png")), width=20, height=20)
 #})
 
-
-
-###gibt mir den scatterplot pro Genotyp für den 28.02. aber ich habe die BoniturDaten vergessen, mit rein zu nehmen :/ -> morgen nochmal!!
+ 
 ```
 
 ```{r}
@@ -786,11 +721,11 @@ list_1Genos2<-list()
 
 ```{r}
 
-
+#Dataframes siehe RF_forAllCases_DatesColumns.R
 #hier werden alle Indices(items der Liste selxcted_IndicesDatescoluims) 
 #mit den Messtagen auf das TG projizieert:
 
-#selected_IndicesDatecolumns
+#selected_IndicesDatecolumns NIVHT nach Gruppen getrennt!!!!
 ####Date rfS
 
 genotype_rfs<-create_Geno_rfs(selected_IndicesDatecolumns)
@@ -805,7 +740,7 @@ TG_rfs<-create_TG_rfs(selected_IndicesDatecolumns)
 feature_importance_TG<-lapply(TG_rfs, function(i){print(i$importance)})
 
 
-
+#selcted_IndicesIndexColumn NICHT nach Gruppen getrennt!!!!!!
 #######Indices RFS
 rf_Indices<-rfsrc(TG ~ .,
                   data = dplyr::select(Genotype_allHC_Indexcolumns_Condition, `Measuring Date` ,Genotype,

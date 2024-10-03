@@ -223,6 +223,122 @@ triplet_to_colour<-function(x){
 }
 
 
+#########################################
+#merging the datframes for ( wide ) PCA, kmeans and other stuff
+
+
+############jetzt erstmal so, fusing the Hc and Fc data
+fuse_me<-function(df_split){
+  
+  
+  data_merged<-lapply(list_cutFc, function(x){
+    
+    df_split_date <- as.Date(df_split$`Measuring Date`[1])
+    x_date <- as.Date(x$`Measuring Date`[1])
+    
+    
+    if(df_split_date == x_date | df_split_date +1 == x_date){
+      x$`Measuring Date`<-df_split$`Measuring Date`
+      inner_join(df_split, x, by=c("Measuring Date", "Plant ID"))
+    }
+    else {
+      return(NULL)
+    }
+  }
+  )
+  
+  data_merged <- Filter(Negate(is.null), data_merged)
+  
+  if (length(data_merged) == 0) {
+    data_merged <- list(df_split)
+  }
+  
+  
+  #names(data_merged) <- timepoints[1:length(data_merged)]
+  return(data_merged)
+  
+}
+####fusing hcFc and RGB data
+#kann ich später noch zu eienr zusammenfügen Fubktion
+
+
+fuse_me2<-function(df_split){
+  
+  
+  data_merged<-lapply(list_cutRGB_C_hexcodes, function(x){
+    
+    df_split_date <- as.Date(df_split$`Measuring Date`[1])
+    x_date <- as.Date(x$`Measuring Date`[1])
+    
+    
+    if(df_split_date == x_date | df_split_date +1 == x_date){
+      x$`Measuring Date`<-df_split$`Measuring Date`
+      inner_join(df_split, x, by=c("Measuring Date", "Plant ID"))
+    }
+    else {
+      return(NULL)
+    }
+  }
+  )
+  
+  data_merged <- Filter(Negate(is.null), data_merged)
+  
+  if (length(data_merged) == 0) {
+    data_merged <- list(df_split)
+  }
+  
+  
+  #names(data_merged) <- timepoints[1:length(data_merged)]
+  return(data_merged)
+  
+}
+
+
+fuse_me_Bonitur<-function(df_split, extra_data){
+  
+  extraData_list<-split_dataframe(extra_data, "Measuring Date")
+  
+  data_merged<-lapply(extraData_list, function(x){
+    
+    df_split_date <- as.Date(df_split$`Measuring Date`[1])
+    x_date <- as.Date(x$`Measuring Date`[1])
+    
+    
+    if(df_split_date == x_date | df_split_date +1 == x_date){
+      x$`Measuring Date`<-df_split$`Measuring Date`
+      inner_join(df_split, x, by=c("Measuring Date", "Plant ID", "Genotype"))
+    }
+    else {
+      return(NULL)
+    }
+  }
+  )
+  
+  data_merged <- Filter(Negate(is.null), data_merged)
+  
+  if (length(data_merged) == 0) {
+    data_merged <- list(df_split)
+  }
+  
+  
+  #names(data_merged) <- timepoints[1:length(data_merged)]
+  return(data_merged)
+  
+}
+
+
+
+###kleien funktion, die mir die dataframes splittet wie ich es will split() alleine tut das nicht....
+
+split_dataframe <- function(df, column) {
+  split_list <- split(df, df[[column]])
+  return(split_list)
+}
+##################################################################
+
+
+##################################################################
+#random forests loops
 #####Indices and Genotypes from Dates
 create_Geno_rfs<-function(df_list){
   
