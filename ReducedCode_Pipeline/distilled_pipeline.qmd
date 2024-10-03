@@ -10,7 +10,7 @@ editor: visual
 
 
 
-requiredPackages<-c("readxl","tidyverse","reshape2","stringr","sjmisc","ggpubr","matrixStats", "gridExtra","corrplot","nlme","lme4","car","emmeans","multcomp","multcompView", "lmtest","GGally","RColorBrewer")
+requiredPackages<-c("readxl","tidyverse","reshape2","stringr","sjmisc","ggpubr","matrixStats", "gridExtra","corrplot","nlme","lme4","car","emmeans","multcomp","multcompView", "lmtest","GGally","RColorBrewer","MultivariateRandomForest", "multivar","randomForestSRC")
 
 for(package in requiredPackages){
   if(!requireNamespace(package, quietly=TRUE))
@@ -36,8 +36,11 @@ library(multcompView)
 library(lmtest)
 library(GGally)
 library(RColorBrewer)
-
-source("functionsXLSX.R", local = knitr::knit_global() )
+library(MultivariateRandomForest)
+library(caret)
+library(randomForestSRC)
+library(rsample)
+#source("functionsXLSX.R", local = knitr::knit_global() )
 
 
 #####
@@ -103,7 +106,8 @@ list_Rgb_Morpho<-list_allLists[["list_Rgb_Morpho_Plant"]]
 
 
 
-
+#auxch hier wäre eine Funbktion noch ganz gut, die mir die dfs in einem
+#zusammensschneidet, vllt so in etwa wie die list_extemsion funktion..
 
 list_cutFc<-lapply(list_Fc_Plant, function(x){x%>%dplyr::select('Measuring Date', 'Plant ID', Fm:Size)%>%mutate('Measuring Date'=gsub("\\s\\d+.+", "",x$`Measuring Date`[1]))%>%as.data.frame(.)})
 
@@ -274,6 +278,10 @@ list_NDVI_splitBYnames<-lapply(list_of_names, testing_fun, x=list_indices_by_loo
 
 path_plotaverage<-"C:/Users/HabisohnC/Desktop/DigAB/plots/"
 
+begin<-as.Date("2024-02-12",  format="%Y-%m-%d")
+end<-as.Date("2024-03-01",  format="%Y-%m-%d")
+
+
 #loops for redundant code below, replacement :)
 list_INDICES_splitBYName<-lapply(list_of_names, function(b){lapply(list_indices_Hc, function(q){
   list_index<-indices.to.list(q,"Hc_Plant")
@@ -281,6 +289,7 @@ list_INDICES_splitBYName<-lapply(list_of_names, function(b){lapply(list_indices_
   return(genotype_list)}
 )})
 names(list_INDICES_splitBYName)<-list_of_names
+
 
 list_indices<-unlist(list_INDICES_splitBYName, recursive = FALSE)
 list_mean_sd_INDICES<-list()
@@ -300,7 +309,7 @@ for(i in list_indices){list_plots_ALL_HC[[length(list_plots_ALL_HC)+1]]<-
                 color=Condition))+
   #geom_smooth(aes(color=Condition, group=Condition))+#kommt eventuell weg
   ylab(i$variable[1])+xlab("Date")+labs(title=i$Genotype[1])+
-  #geom_rect(aes(xmin=as.Date("2024-04-17", format="%Y-%m-%d"),xmax=as.Date("2024-05-08", format="%Y-%m-%d"),ymin=-Inf,ymax=Inf),alpha=0.02,fill="lightgrey", color="lightgrey")+
+   geom_rect(aes(xmin=begin, xmax=end,ymin=-Inf,ymax=Inf),fill="lightgrey",alpha=0.02,color="lightgrey")+
   geom_point(size=1.5)+theme_bw(base_size = 10)+
   scale_color_manual(values = c("Control"="turquoise3", 
                                 "Drought stress"="coral"))+
@@ -326,7 +335,6 @@ for(i in 1:length(list_mean_sd_INDICES)){
 ############replacement code für redundant code unten:
 #neue source Liste: list_indices_byloop
 
-
 list_meanOVERCondition<-lapply(list_indices_by_loop, function(i){i%>%
     group_by(`Measuring Date`,Condition)%>%
     summarise(Mean=mean(value, na.rm=T),SD=sd(value, na.rm=T))%>%mutate(Name=i$Genotype[1])%>%
@@ -334,7 +342,7 @@ list_meanOVERCondition<-lapply(list_indices_by_loop, function(i){i%>%
 
 list_plots_meanOVERCondition<-lapply(list_meanOVERCondition, function(p){p%>%ggplot(aes(x=as.Date(`Measuring Date`, format="%Y-%m-%d"),y=Mean,color=Condition))+
   ylab(p$Index[1])+xlab("Date")+
-  #geom_rect(aes(xmin=as.Date("2024-02-12", format="%Y-%m-%d"),xmax=as.Date("2024-03-01", format="%Y-%m-%d"),ymin=-Inf,ymax=Inf),fill="lightgrey",alpha=0.02,color="lightgrey")+
+  geom_rect(aes(xmin=begin, xmax=end,ymin=-Inf,ymax=Inf),fill="lightgrey",alpha=0.02,color="lightgrey")+
   geom_point(size=1.5)+theme_bw(base_size = 10)+geom_errorbar(aes(ymin=Mean - SD, ymax=Mean+SD),
   width=.2, position=position_dodge(0.05))+
   scale_color_manual(values = c("Control"="turquoise3", 
@@ -343,8 +351,8 @@ list_plots_meanOVERCondition<-lapply(list_meanOVERCondition, function(p){p%>%ggp
         legend.title = element_text(size=13),
         axis.title.x = element_text(hjust=1),
        axis.text=element_text(size=13),axis.title=element_text(size=14))
-  ggsave(file=paste0(path_plotaverage, paste0(p$Index[1], "_average.pdf")))
-   ggsave(file=paste0(path_plotaverage, paste0(p$Index[1], "_average.png")))
+  #ggsave(file=paste0(path_plotaverage, paste0(p$Index[1], "_average.pdf")))
+  # ggsave(file=paste0(path_plotaverage, paste0(p$Index[1], "_average.png")))
   })
 ```
 
@@ -354,15 +362,16 @@ list_plots_meanOVERCondition<-lapply(list_meanOVERCondition, function(p){p%>%ggp
 for(i in list_indices_by_loop){ggplot(i, aes(x=as.Date(`Measuring Date`, format="%Y-%m-%d"), y=value, color=Condition))+
     ylab(paste0(i$variable[1]))+xlab("Date")+labs(title=paste0(i$variable[1])," all Genotypes")+
     geom_point(size=1.5)+
-    #geom_rect(aes(xmin=as.Date("2024-02-12", format="%Y-%m-%d"),xmax=as.Date("2024-03-01", format="%Y-%m-%d"),ymin=-Inf,ymax=Inf),alpha=0.02,fill="lightgrey", color="lightgrey")+
+     geom_rect(aes(xmin=begin, xmax=end,ymin=-Inf,ymax=Inf),fill="lightgrey",alpha=0.02,color="lightgrey")+
     theme_bw(base_size = 10)+
     scale_color_manual(values = c("Control"="turquoise3", 
                                   "Drought stress"="coral"))+
     theme(axis.text.x = element_text(angle=90, vjust=0.5, size=9))+
     geom_smooth(aes(color=Condition, group=Condition))+geom_point()
   
-  ggsave(filename = paste0(path_plotaverage,paste0(i$variable[1]),"_allGenotypes.pdf"))
-  ggsave(filename = paste0(path_plotaverage,paste0(i$variable[1]),"_allGenotypes.png"))}
+ # ggsave(filename = paste0(path_plotaverage,paste0(i$variable[1]),"_allGenotypes.pdf"))
+  #ggsave(filename = paste0(path_plotaverage,paste0(i$variable[1]),"_allGenotypes.png"))
+  }
 
 
 
@@ -381,7 +390,7 @@ for(i in water_tables_all20Genotypes){list_water_plots[[length(list_water_plots)
  ggplot(i[is.element(i$Date, as.Date(list_indices_by_loop[[1]]$`Measuring Date`)),],
         aes(x=as.Date(Date, format="%Y-%m-%d"),y=Mean))+xlab("Date")+
        scale_y_continuous(name="Mean water potential [kPa]")+
-  #geom_rect(aes(xmin=as.Date("2024-02-12", format="%Y-%m-%d"),xmax=as.Date("2024-03-01", format="%Y-%m-%d"),ymin=-Inf,ymax=Inf),fill="lightgrey",alpha=0.02,color="lightgrey")+
+  geom_rect(aes(xmin=begin, xmax=end,ymin=-Inf,ymax=Inf),fill="lightgrey",alpha=0.02,color="lightgrey")+
   theme_bw(base_size = 10)+
   theme(axis.text.x = element_text(angle=75, hjust=1.2),plot.title = element_text(size=16),
         legend.text=element_text(size=12),legend.title = element_text(size=13), 
@@ -413,6 +422,8 @@ ggsave(filename=paste0(path_plotaverage, paste0(names(water_tables_all20Genotype
 ```{r}
 
 source("manualFiles.R",local = knitr::knit_global())#source script erstellt den dataframe den ich für die statistik verwende
+source("MatrixTranspo_forRF.R", local = knitr::knit_global() )
+source("RF_forAllCases_Dates_Columns.R", local = knitr::knit_global() )
 
 
 library(corrr)
@@ -429,6 +440,51 @@ library(factoextra)
 library(ade4)
 library(magrittr)
 library(cluster)
+```
+
+```{r}
+#plotting all indices over yield of genotypes (x-axis), plots per timepoint
+#using:Genotype_allHC_Indexcolumns from MatrixTranspo_forER.R
+
+timepoints<-unique(Genotype_allHC_Indexcolumns$`Measuring Date`)
+
+
+Gruppen_timepoints_melt<-lapply(timepoints, function(pick){
+  
+  
+  dataframe_timep<-Genotype_allHC_Indexcolumns%>%as_tibble()%>%dplyr::filter(`Measuring Date`==pick)%>%dplyr::select(-`Size-avg`)
+  
+  new_colsMean<-dataframe_timep%>%group_by(Genotype)%>%summarise(across(where(is.numeric), mean))%>%reshape2::melt(id.vars="Genotype", variable.name="Index", value.name="Value")%>%mutate(Date=dataframe_timep$`Measuring Date`[1])
+   
+  
+  tg_values <- new_colsMean[new_colsMean$Index == "TG", ]
+  merged_df <- merge(new_colsMean,
+                   tg_values, by = "Genotype", suffixes = c("", "_TG"))
+
+  merged_df <- merged_df[merged_df$Index != "TG", ]
+  
+  
+  return(merged_df)
+})
+
+
+Timepoints_IndexOVERyield_plots<-lapply(Gruppen_timepoints_melt, function(p){
+  plot1 <- ggplot(p, aes(x = Value_TG, y = Value, color = Index)) +
+  geom_line() +
+  scale_x_continuous(
+    breaks = tg_values$Value,
+    labels = tg_values$Genotype,
+  )+
+  labs(x = "TG Values", y = "Index Values",
+       title = paste0("Plot of TG Values vs. Index Values ", p$Date_TG[1])) +
+  theme(axis.text.x = element_text(angle=45, hjust=1.2, vjust=2), axis.text=element_text(size=13), 
+        axis.ticks.length.x=unit(1,"cm"))+
+  guides(x=guide_axis(n.dodge = 2))
+  
+  return(plot1)
+})
+
+#tick.-customisation siehe code_timepointPlotting_CoPilot.R
 ```
 
 ```{r}
@@ -515,20 +571,6 @@ Pattern1_list<-do.call("list",mget(Pattern1))
 
 path_plotsDownstream<-"C:/Users/HabisohnC/Desktop/DigAB/plots/DownstreamStatistics_plots/"
 
-ggpairs(dplyr::select(wide_all1803, Condition, ends_with("avg"), QY_max, TG), mapping=ggplot2::aes(colour=Condition),
-        lower=list(continous=wrap("smooth", alpha=0.05, size=0.1)),
-        diag = list(discrete="barDiag",continuous = wrap("densityDiag", alpha=0.5 )),
-        cardinality_threshold = 40, title="Indices,Bonitur,Yield 18.03.", legend=1)+
-    theme(panel.grid.major = element_blank())+
-    scale_color_manual(values = c("Control"="turquoise3", 
-                                  "Drought stress"="coral"))+
-    scale_fill_manual(values = c("Control"="turquoise3", 
-                                 "Drought stress"="coral"))
-
- ggsave(filename = paste0(path_plotsDownstream,paste0(wide_all1803$`Measuring Date`[1]),".png"), width=20, height=20)
- 
- 
- 
  ################### looping
  #liste der wide_dfs, die HC UND FC UND Yield haben: != list_Pattern1 !! NOTE
  list_scatterplotting<-list(wide_all0702,wide_all0902, wide_all1402, wide_all2102, wide_all2302, wide_all2802, wide_all0103, wide_all0403, wide_all0603, wide_all0803, wide_all1303, wide_all1503, wide_all1803)
@@ -548,7 +590,7 @@ ggpairs(dplyr::select(wide_all1803, Condition, ends_with("avg"), QY_max, TG), ma
     scale_fill_manual(values = c("Control"="turquoise3", 
                                  "Drought stress"="coral"))
 
- ggsave(filename = paste0(path_plotsDownstream2,paste0(i$`Measuring Date`[1]),".png"), width=20, height=20)
+ #ggsave(filename = paste0(path_plotsDownstream2,paste0(i$`Measuring Date`[1]),".png"), width=20, height=20)
  return(ploti)
    
  })
@@ -570,8 +612,8 @@ datasets_Genotypes<-datasets_Genotypes[-c(7,13)]###schmeissen mir meinen loop au
 
 list_Genotypes_2802<-lapply(datasets_Genotypes, function(x){
   
-  pipi<-dplyr::select(x, Condition, ends_with("avg"), QY_max, TG)
-  piplot<-ggpairs(pipi, mapping=ggplot2::aes(colour=Condition),
+  pi<-dplyr::select(x, Condition, ends_with("avg"), QY_max, LeafNumber:TG)
+  piplot<-ggpairs(pi, mapping=ggplot2::aes(colour=Condition),
                                                lower=list(continous=wrap("smooth", alpha=0.05, size=0.1)),
                                                diag = list(discrete="barDiag",continuous = wrap("densityDiag", alpha=0.5 )),
                                                cardinality_threshold = 40, title=paste0(x$Genotype[1]," Indices,Bonitur,Yield 28.02."), legend=1)+
@@ -585,9 +627,12 @@ list_Genotypes_2802<-lapply(datasets_Genotypes, function(x){
   
   })
 
-lapply(list_Genotypes_2802, function(x){
-  ggsave(x,filename = paste0(path_plotsDownstream,paste0(x$title ,".png")), width=20, height=20)
-})
+#lapply(list_Genotypes_2802, function(x){
+ # ggsave(x,filename = paste0(path_plotsDownstream,paste0(x$title ,"_2nd.png")), width=20, height=20)
+#})
+
+
+
 ###gibt mir den scatterplot pro Genotyp für den 28.02. aber ich habe die BoniturDaten vergessen, mit rein zu nehmen :/ -> morgen nochmal!!
 ```
 
@@ -627,19 +672,160 @@ list_biplots_wideDFs<-lapply(list_PCA_wideDFs, ggbiplot::ggbiplot)
  list_biplots_wideDFs_DS_Date<-lapply(list_PCA_wideDFs_DS_Date, function(biplotting){ggbiplot::ggbiplot(biplotting,labels = DS_list_Pattern1[[1]]$Genotype, groups = DS_list_Pattern1[[1]]$Genotype)+labs(title=paste0("PCA biplot ", biplotting$date))})
  
  
- lapply(list_biplots_wideDFs_DS_Date, function(pi){
-   ggsave(pi,filename = paste0(path_plotsDownstream,paste0(pi$labels$title,".png")), width=20, height=20)
- })
+# lapply(list_biplots_wideDFs_DS_Date, function(pi){
+ #  ggsave(pi,filename = paste0(path_plotsDownstream,paste0(pi$labels$title,".png")), width=20, height=20)
+# })
 ```
 
 ```{r}
 ####### k means clustering ---loop TODO
+DS_wide2802<-DS_list_Pattern1$wide_all2802
+pinky<-dplyr::select(DS_wide2802, where(is.numeric))
 
- kmeans_2802<-kmeans(dplyr::select(DS_list_Pattern1$wide_all2802, where(is.numeric)), centers=3, nstart=20 )
+kmeans_2802<-kmeans(pinky, centers=4, nstart=20 )
  
-autoplot(kmeans_2802, data=DS_list_Pattern1$wide_all2802,label = TRUE, label.label = DS_list_Pattern1$wide_all2802$Genotype, label.size=3)+labs(title="3-means clustering 28.02.Gruppe DS Bonitur, Indices, Yield") 
+
+DS_wide2802$cluster<-kmeans_2802$cluster
+
+autoplot(kmeans_2802, data=pinky,label = TRUE, label.label = DS_list_Pattern1$wide_all2802$Genotype, label.size=3)+labs(title="3-means clustering 28.02.Gruppe DS Bonitur, Indices, Yield") 
+
+ggsave(filename =paste0(path_plotsDownstream,"clusters1.png"),width=10, height=10 )
 
 sil <- silhouette(kmeans_2802$cluster, dist(DS_list_Pattern1$wide_all2802))
 
 fviz_silhouette(sil)
+
+ggsave(filename =paste0(path_plotsDownstream,"silhouette1.png"),width=15, height=15 )
+```
+
+```{r}
+
+#####besserer width.average: mit weniger Indices
+
+DS_wide_select2802<-dplyr::select(DS_wide2802, `NDVI-avg`, `MCARI1-avg`, `PRI-avg`, `OSAVI-avg`, `SIPI-avg`, QY_max, LeafNumber:TG)
+kmeans_2802_replicate3k<-kmeans(DS_wide_select2802, centers=3, nstart=20 )
+
+kmeans_2802_replicate4k<-kmeans(DS_wide_select2802, centers=4, nstart=20 )
+
+
+DS_wide2802$cluster<-kmeans_2802_replicate3k$cluster
+
+autoplot(kmeans_2802_replicate3k, data=DS_wide_select2802,label = TRUE, label.label = DS_list_Pattern1$wide_all2802$Genotype, label.size=3)+labs(title="3-means clustering select Indices 28.02.Gruppe DS Bonitur, Indices, Yield")
+
+ggsave(filename =paste0(path_plotsDownstream,"clusters2.png"),width=10, height=10 )
+
+sil <- silhouette(kmeans_2802_replicate3k$cluster, dist(DS_wide_select2802))
+
+fviz_silhouette(sil)
+ggsave(filename =paste0(path_plotsDownstream,"silhouette2.png"),width=15, height=15 )
+
+
+DS.2802.cluster1<-DS_wide2802%>%dplyr::filter(cluster==1)%>%dplyr::select(`Plant ID`, Genotype, cluster ,TG)
+
+DS.2802.cluster2<-DS_wide2802%>%dplyr::filter(cluster==2)%>%dplyr::select(`Plant ID`, Genotype, cluster,TG )
+
+
+DS.2802.cluster3<-DS_wide2802%>%dplyr::filter(cluster==3)%>%dplyr::select(`Plant ID`, Genotype, cluster,TG )
+
+cluster3_orderd<-DS.2802.cluster3[order(DS.2802.cluster3$TG, decreasing = TRUE),]
+cluster1_orderd<-DS.2802.cluster1[order(DS.2802.cluster1$TG, decreasing = TRUE),]
+cluster2_orderd<-DS.2802.cluster2[order(DS.2802.cluster2$TG, decreasing = TRUE),]
+
+
+
+DS_wide2802$cluster<-as.factor(DS_wide2802$cluster)
+
+ggbiplot::ggbiplot(p,labels = DS_wide2802$Genotype, groups = DS_wide2802$cluster) +
+    scale_color_manual(name="Variety", values = c("red","green", "purple"))+ scale_fill_manual(values =c("red","green", "purple"))+
+    geom_point(aes(colour=DS_wide2802$cluster))
+```
+
+```{r}
+anova_model_Geno<-aov(`NDVI-avg`~Genotype, data=DS_wide2802)
+anova_model_type3_Geno<-Anova(anova_model_Geno, type="III")
+anova_model_type3_Geno
+
+
+posthoc_Geno<-emmeans(anova_model_Geno, ~Genotype, na.action=na.exclude)
+posthoc_result_Geno<-cld(posthoc_Geno, alpha=0.5, Letter=letters)
+
+
+posthoc_result_Geno
+```
+
+```{r}
+list_1Genos2<-list()
+
+
+ list_tipitopi<- lapply(list_of_names, function(i){
+  tiptop<-lapply(list_indices_by_loop, function(x){
+    left<-x%>%dplyr::filter(Genotype==i, Condition=="Drought stress")
+    return(left)
+  })
+  list_1Genos2<-append(list_1Genos2,tiptop)
+  })
+ 
+  names(list_tipitopi)<-list_of_names
+  
+  
+  #rm(list_1Genos2)
+  
+  indices_perGenotype_list<-unlist(list_tipitopi, recursive=FALSE)
+  
+  
+  #für liste indices_perGenotype_list mache ich nun den mean für jedes Datum für die einzelnen dataframes (nach genotyp und Index getrennt, nur GRuppe DS is sowieso schon drinnen)
+  
+  mean_indices_perGenotype<-lapply(indices_perGenotype_list, function(pip){
+    pip%>%group_by(`Measuring Date`)%>%
+    summarise_at(vars(value), list(Mean=mean, SD=sd))
+  })
+
+  
+ 
+```
+
+```{r}
+
+
+#hier werden alle Indices(items der Liste selxcted_IndicesDatescoluims) 
+#mit den Messtagen auf das TG projizieert:
+
+#selected_IndicesDatecolumns
+####Date rfS
+
+genotype_rfs<-create_Geno_rfs(selected_IndicesDatecolumns)
+
+feature_importance_Geno<-lapply(genotype_rfs, function(i){print(i$importance)})
+#hier werden alle Indices(items der Liste selxcted_IndicesDatescoluims) 
+#mit den Messtagen auf das TG projizieert:
+
+
+TG_rfs<-create_TG_rfs(selected_IndicesDatecolumns)
+
+feature_importance_TG<-lapply(TG_rfs, function(i){print(i$importance)})
+
+
+
+#######Indices RFS
+rf_Indices<-rfsrc(TG ~ .,
+                  data = dplyr::select(Genotype_allHC_Indexcolumns_Condition, `Measuring Date` ,Genotype,
+                                       where(is.numeric)),
+                  ntree=999, importance = TRUE )
+ rf_Indices$importance
+
+rf_Indices_Cond<-rfsrc(TG ~ .,
+                           data = dplyr::select(Genotype_allHC_Indexcolumns_Condition, `Measuring Date` , Condition,Genotype,
+                                                where(is.numeric)),
+                           ntree=999, importance = TRUE )
+
+rf_Indices_Cond$importance
+
+
+
+rfs_GenotypesFROMIndex<-create_TG_rfs_GenoIndex(selected_GenotypesIndexcolumns)
+
+feature_importance_TG_Indices<-lapply(rfs_GenotypesFROMIndex, function(i){print(i$importance)})
+
+
+
 ```

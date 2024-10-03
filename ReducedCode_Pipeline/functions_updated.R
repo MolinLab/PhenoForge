@@ -222,3 +222,68 @@ triplet_to_colour<-function(x){
   
 }
 
+
+#####Indices and Genotypes from Dates
+create_Geno_rfs<-function(df_list){
+  
+  list_Geno_rf<-list()
+  list_TG_rf<-list()
+  
+  pip<-lapply(df_list, function(df){
+    
+    rf_name<-paste0("rfGeno",gsub("-", "",df$Index[1]))
+    rf_Index_Geno <- rfsrc(Genotype ~ .,
+                           data = dplyr::select(df,Condition,Genotype,
+                                                where(is.numeric)),
+                           ntree=999, importance = TRUE)
+    #assign(rf_name, rf_Index_Geno, envir= .GlobalEnv)
+    
+  })
+  names(pip)<-list_indices_Hc
+  return(pip)
+}
+
+
+create_TG_rfs<-function(df_list){
+  
+  list_Geno_rf<-list()
+  list_TG_rf<-list()
+  
+  pip<-lapply(df_list, function(df){
+    
+    rf_name<-paste0("rfTG",gsub("-", "",df$Index[1]))
+    rf_Index_Geno <- rfsrc(TG ~ .,
+                           data = dplyr::select(df,Condition,Genotype,
+                                                where(is.numeric)),
+                           ntree=999, importance = TRUE)
+    #assign(rf_name, rf_Index_Geno, envir= .GlobalEnv)
+    
+  })
+  names(pip)<-list_indices_Hc
+  return(pip)
+}
+
+
+
+#####genotypes from Indices
+
+
+create_TG_rfs_GenoIndex<-function(df_list){
+  
+  list_Geno_rf<-list()
+  list_TG_rf<-list()
+  
+  pip<-lapply(df_list, function(df){
+    
+    rf_name<-paste0("rfTG",gsub("-", "",df$Genotype[1]))
+    rf_Index_Geno <- rfsrc(TG ~ .,
+                           data = dplyr::select(df,Condition,`Measuring Date`,
+                                                where(is.numeric)),
+                           ntree=999, importance = TRUE)
+    assign(rf_name, rf_Index_Geno, envir= .GlobalEnv)
+    
+  })
+  names(pip)<-list_of_names
+  return(pip)
+}
+
