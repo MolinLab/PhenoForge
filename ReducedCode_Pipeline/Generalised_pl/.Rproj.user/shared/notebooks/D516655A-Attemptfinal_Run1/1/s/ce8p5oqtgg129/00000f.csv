@@ -1,0 +1,20 @@
+"0","source(""functions_updated.R"", local = knitr::knit_global() )"
+"0","source(""datawrangling1.R"", local = knitr::knit_global() )"
+"2","[36mℹ[39m Using [34m[34m""','""[34m[39m as decimal and [34m[34m""'.'""[34m[39m as grouping mark. Use `read_delim()` for more control.
+"
+"2","[1mRows: [22m[34m41[39m [1mColumns: [22m[34m19[39m"
+"2","[36m──[39m [1mColumn specification[22m [36m────────────────────────────────────────[39m
+[1mDelimiter:[22m "";""
+[32mdbl[39m  (18): Tray_2, Tray_1DS, Tray_3, Tray_4DS, Tray_6, Tray_...
+[34mdate[39m  (1): Date"
+"2","
+[36mℹ[39m Use `spec()` to retrieve the full column specification for this data.
+[36mℹ[39m Specify the column types or set `show_col_types = FALSE` to quiet this message."
+"0","source(""metatable.R"", local = knitr::knit_global() )"
+"0","source(""datawrangling2.R"", local = knitr::knit_global() )"
+"2","Fehler in utils:::readCitationFile(""C:/Program Files/RStudio/resources/app/resources/CITATION"") : 
+  Zeitlimit erreicht
+"
+"0","source(""datawrangling3.R"", local = knitr::knit_global() )"
+"0","source(""watertable.R"", local = knitr::knit_global() )"
+"2","Warnung: Unknown or uninitialised column: `MeasuringDate`."

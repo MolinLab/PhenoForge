@@ -1,0 +1,751 @@
+---
+title: "Pipeline_results"
+format: html
+editor: visual
+---
+
+libraries:
+
+```{r, warning=FALSE, message=FALSE}
+#| label: load-packages
+#| message: false
+
+
+
+requiredPackages<-c("readxl","tidyverse","reshape2","stringr","sjmisc","ggpubr","matrixStats", "gridExtra","corrplot","nlme","lme4","car","emmeans","multcomp","multcompView", "lmtest","GGally","RColorBrewer","MultivariateRandomForest", "multivar","randomForestSRC")
+
+for(package in requiredPackages){
+  if(!requireNamespace(package, quietly=TRUE))
+    install.packages(package)
+}
+
+library(readxl)
+library(tidyverse)
+library(reshape2)
+library(reshape)
+library(stringr)
+library(sjmisc)
+library(ggpubr)
+library(matrixStats)
+library(gridExtra)
+library(corrplot)
+library(nlme)
+library(lme4)
+library(car)
+library(emmeans)
+library(multcomp)
+library(multcompView)
+library(lmtest)
+library(GGally)
+library(RColorBrewer)
+library(MultivariateRandomForest)
+library(caret)
+library(randomForestSRC)
+library(rsample)
+library(ggsci)
+#source("functionsXLSX.R", local = knitr::knit_global() )
+
+
+#####
+#statistics packages
+
+library(corrr)
+library(ggcorrplot)
+library(FactoMineR)
+library(vcd)
+library(factoextra)
+library(rfPermute)
+library(ggfortify)
+library(agricolae)
+library(randomForest)
+library(stats)
+```
+
+Block 1:
+
+# Data wrangling
+
+#comments:
+
+source files:
+
+I nbeed to check, whether and if so, how, one includes the file in th project, how are scripts/qmds shared and all the dependent files?????? check out!!!
+
+-\> here package;
+
+```{r}
+source("functions_updated.R", local = knitr::knit_global() )
+source("datawrangling1.R", local = knitr::knit_global() )
+source("metatable.R", local = knitr::knit_global() )
+source("datawrangling2.R", local = knitr::knit_global() )
+source("datawrangling3.R", local = knitr::knit_global() )
+source("watertable.R", local = knitr::knit_global() )
+```
+
+Block 2:
+
+# First Visualization
+
+Plots, plots, and more plots ....
+
+## **Plots Index of Genotypes, Mean of Conditions**
+
+```{r}
+
+path_plotaverage<-"C:/Users/HabisohnC/Desktop/DigAB/plots/geno_meanCondition/"
+
+begin<-as.Date("2024-02-12",  format="%Y-%m-%d")
+end<-as.Date("2024-03-01",  format="%Y-%m-%d")
+
+
+#naming the dfs in the list of HC indices
+list_INDICES_splitBYName<-lapply(list_of_names, function(b){lapply(list_indices_Hc, function(q){
+  list_index<-indices.to.list(q,"Hc_Plant")
+  genotype_list<-testing_fun(list_index,b)
+  return(genotype_list)}
+)})
+names(list_INDICES_splitBYName)<-list_of_names
+
+
+list_indices<-unlist(list_INDICES_splitBYName, recursive = FALSE)
+list_mean_sd_INDICES<-list()
+list_plots_ALL_HC<-list()
+list_plots_IndicesANDmean<-list()
+
+
+#calculating mean per df (one index, one genotype df all dates)
+for(i in list_indices){
+  list_mean_sd_INDICES[[length(list_mean_sd_INDICES)+1]]<-i%>%
+    group_by(`Measuring Date`,Condition)%>%
+    summarise(Mean=mean(value, na.rm=T),SD=sd(value, na.rm=T))%>%mutate(Name=i$Genotype[1])%>%
+    mutate(Index=i$variable[1])}
+
+#plotting 
+for(i in list_indices){list_plots_ALL_HC[[length(list_plots_ALL_HC)+1]]<-
+  ggplot(i, aes(x=as.Date(`Measuring Date`, format="%Y-%m-%d"), y=value,group=`Plant Name`, 
+                color=Condition))+
+  #geom_smooth(aes(color=Condition, group=Condition))+#kommt eventuell weg
+  ylab(i$variable[1])+xlab("Date")+labs(title=i$Genotype[1])+
+   geom_rect(aes(xmin=begin, xmax=end,ymin=-Inf,ymax=Inf),fill="lightgrey",alpha=0.02,color="lightgrey")+
+  geom_point(size=1.5)+theme_bw(base_size = 10)+
+  scale_color_manual(values = c("Control"="turquoise3", 
+                                "Drought stress"="coral"))+
+  theme(axis.text.x = element_text(angle=75, hjust=1.2),plot.title = element_text(size=16), 
+        legend.text=element_text(size=12),legend.title = element_text(size=13), 
+        axis.title.x = element_text(hjust=1),
+        axis.text=element_text(size=13),axis.title=element_text(size=14))}
+
+
+#adding the mean to plot
+for(i in 1:length(list_mean_sd_INDICES)){
+  list_plots_IndicesANDmean[[length(list_plots_IndicesANDmean)+1]]<-
+    list_plots_ALL_HC[[i]]+geom_line(data=list_mean_sd_INDICES[[i]], 
+                                     aes(x=as.Date(`Measuring Date`, format="%Y-%m-%d"),
+                                         y=Mean,color=Condition, group=Condition))
+  
+ # ggsave(file=paste0(path_plotaverage, paste0(x$`Measuring Date`, ".png")))
+  
+  
+  }
+
+```
+
+## Plots Average over Condition per Index
+
+```{r}
+
+
+############replacement code für redundant code unten:
+#neue source Liste: list_indices_byloop
+
+#same as list_mean_sd_INDICES!!!
+list_meanOVERCondition<-lapply(list_indices_by_loop, function(i){i%>%
+    group_by(`Measuring Date`,Condition)%>%
+    summarise(Mean=mean(value, na.rm=T),SD=sd(value, na.rm=T))%>%mutate(Name=i$Genotype[1])%>%
+    mutate(Index=i$variable[1])})
+
+list_plots_meanOVERCondition<-lapply(list_meanOVERCondition, function(p){p%>%ggplot(aes(x=as.Date(`Measuring Date`, format="%Y-%m-%d"),y=Mean,color=Condition))+
+  ylab(p$Index[1])+xlab("Date")+
+  geom_rect(aes(xmin=begin, xmax=end,ymin=-Inf,ymax=Inf),fill="lightgrey",alpha=0.02,color="lightgrey")+
+  geom_point(size=1.5)+geom_line()+theme_bw(base_size = 10)+geom_errorbar(aes(ymin=Mean - SD, ymax=Mean+SD),
+  width=.2, position=position_dodge(0.05))+
+  scale_color_manual(values = c("Control"="turquoise3", 
+                                "Drought stress"="coral"))+
+  theme(axis.text.x = element_text(angle=75, hjust=1.2),legend.text=element_text(size=12),
+        legend.title = element_text(size=13),
+        axis.title.x = element_text(hjust=1),
+       axis.text=element_text(size=13),axis.title=element_text(size=14))
+  #ggsave(file=paste0(path_plotaverage, paste0(p$Index[1], "_average.pdf")))
+  # ggsave(file=paste0(path_plotaverage, paste0(p$Index[1], "_average.png")))
+  })
+
+```
+
+## **Plots all Genotypes per Index**
+
+```{r}
+
+for(i in list_indices_by_loop){ggplot(i, aes(x=as.Date(`Measuring Date`, format="%Y-%m-%d"), y=value, color=Condition))+
+    ylab(paste0(i$variable[1]))+xlab("Date")+labs(title=paste0(i$variable[1])," all Genotypes")+
+    geom_point(size=1.5)+
+     geom_rect(aes(xmin=begin, xmax=end,ymin=-Inf,ymax=Inf),fill="lightgrey",alpha=0.02,color="lightgrey")+
+    theme_bw(base_size = 10)+
+    scale_color_manual(values = c("Control"="turquoise3", 
+                                  "Drought stress"="coral"))+
+    theme(axis.text.x = element_text(angle=90, vjust=0.5, size=9))+
+    geom_smooth(aes(color=Condition, group=Condition))+geom_point()
+  
+ # ggsave(filename = paste0(path_plotaverage,paste0(i$variable[1]),"_allGenotypes.pdf"))
+  #ggsave(filename = paste0(path_plotaverage,paste0(i$variable[1]),"_allGenotypes.png"))
+  }
+
+```
+
+#removed the water duo plots, water information will be plotted in meta-plot-\>TODO!!!!!!
+
+\###########################################################
+
+\########################
+
+\###########
+
+Block 3:
+
+# Statistical analysis
+
+#comments
+
+die source files muss ich noch checken, ob ich die nicht früher schon wo dazu tun könnte, bei obigem source Teil ...
+
+```{r}
+
+
+source("manualFiles.R",local = knitr::knit_global())
+source("MatrixTranspo_forRF.R", local = knitr::knit_global() )
+source("datawrangling_statistics.R",local = knitr::knit_global())
+#source script "MatrixTranspo" erstellt die dataframes  Genotype_allHc_Indexcolumns und Genotype_allHC_Datescolumns die ich für die statistik verwende
+
+
+
+library(corrr)
+library(ggcorrplot)
+library(FactoMineR)
+library(vcd)
+library(factoextra)
+library(rfPermute)
+library(ggfortify)
+library(agricolae)
+library(randomForest)
+library(stats)
+library(factoextra)
+library(ade4)
+library(magrittr)
+library(cluster)
+library(ggstatsplot)
+
+```
+
+Korrelogramme
+
+```{r}
+
+
+path_plotsDownstream<-"C:/Users/HabisohnC/Desktop/DigAB/plots/DownstreamStatistics_plots/korrelogramme/"
+ 
+ 
+ 
+
+ testrunscatter<-lapply(CamData_Bonitur_TG, function(i){
+   column_names<-colnames(i)
+   
+   if(str_contains(column_names, "QY_max")==TRUE & str_contains(column_names, "LeafNumber")==TRUE){
+   
+   newdf<-dplyr::select(i, Condition, ends_with("avg"), QY_max, LeafNumber, TillerNumber,TG)
+   ploti<-ggpairs(newdf, mapping=ggplot2::aes(colour=Condition),
+        lower=list(continous=wrap("smooth", alpha=0.05, size=0.1)),
+        diag = list(discrete="barDiag",continuous = wrap("densityDiag", alpha=0.5 )),
+        cardinality_threshold = 40, title=paste0("Indices,Bonitur,", i$`Measuring Date`[1]), legend=1)+
+    theme(panel.grid.major = element_blank())+
+    scale_color_manual(values = c("Control"="turquoise3", 
+                                  "Drought stress"="coral"))+
+    scale_fill_manual(values = c("Control"="turquoise3", 
+                                 "Drought stress"="coral"))
+
+# ggsave(filename = paste0(path_plotsDownstream2,paste0(i$`Measuring Date`[1]),".png"), width=20, height=20)
+ return(ploti)}
+   
+   else if(str_contains(column_names, "LeafNumber")==TRUE){
+     pi<-dplyr::select(i, Condition, ends_with("avg"), LeafNumber, TillerNumber,TG)
+  piplot<-ggpairs(pi, mapping=ggplot2::aes(colour=Condition),
+                                               lower=list(continous=wrap("smooth", alpha=0.05, size=0.1)),
+                                               diag = list(discrete="barDiag",continuous = wrap("densityDiag", alpha=0.5 )),
+                                               cardinality_threshold = 40, title=paste0("Indices,Bonitur,", i$`Measuring Date`[1]), legend=1)+
+    theme(panel.grid.major = element_blank())+
+    scale_color_manual(values = c("Control"="turquoise3", 
+                                  "Drought stress"="coral"))+
+    scale_fill_manual(values = c("Control"="turquoise3", 
+                                 "Drought stress"="coral"))
+  return(piplot)}
+   else{
+      pim<-dplyr::select(i, Condition, ends_with("avg"), TG)
+  pimlot<-ggpairs(pim, mapping=ggplot2::aes(colour=Condition),
+                                               lower=list(continous=wrap("smooth", alpha=0.05, size=0.1)),
+                                               diag = list(discrete="barDiag",continuous = wrap("densityDiag", alpha=0.5 )),
+                                               cardinality_threshold = 40, title=paste0("Indices,Bonitur,", i$`Measuring Date`[1]), legend=1)+
+    theme(panel.grid.major = element_blank())+
+    scale_color_manual(values = c("Control"="turquoise3", 
+                                  "Drought stress"="coral"))+
+    scale_fill_manual(values = c("Control"="turquoise3", 
+                                 "Drought stress"="coral"))
+  return(pimlot)}
+ }
+ )
+ 
+#lapply(testrunscatter, function(x){
+#ggsave(x,filename = paste0(path_plotsDownstream,paste0(x$title ,".png")), width=20, height=20)
+#})
+
+ 
+```
+
+Beginn der User Interaction:
+
+Es muss dann auch auf das Stadium des Experiments Rücksicht genommen werde, ich kann keinen TG plot am Anfang des Laufs machen, da hab ich die TG/yield Info noch gar nuícht!
+
+Boxplots (bitte auswählen!!!)
+
+```{r}
+#Boxplots HC only data with TG_score seperation for both Conditions:
+
+
+boxplots_path<-"C:/Users/HabisohnC/Desktop/DigAB/plots/DownstreamStatistics_plots/boxplots/"
+
+boxes_TGscore<-
+  lapply(CamData_HConly_melt, function(yi){
+    if(!is.null(yi)){
+      
+     
+      ya<-yi%>%dplyr::filter(Condition=="Drought stress")
+            
+      boxa<-ggplot(ya, aes(x=variable, y=value,color=TG_score))+geom_boxplot()+ylim(min(ya$value), max(ya$value))+
+        labs(title=paste0("Drought stress ", yi$`Measuring Date`[1]))+
+        theme(axis.text.x = element_text(angle=90, vjust=0.5, size=9))
+      
+      yb<-yi%>%dplyr::filter(Condition=="Control")
+      
+      boxb<-ggplot(yb, aes(x=variable, y=value,color=TG_score))+geom_boxplot()+
+        labs(title=paste0("Control ", yi$`Measuring Date`[1]))+
+        theme(axis.text.x = element_text(angle=90, vjust=0.5, size=9))
+      
+      boxi<-ggarrange(boxa,boxb,
+                nrow=1, ncol=2, legend = "top", heights=c(0.75,0.75))
+      
+     # ggsave(boxi, filename=paste0(boxplots_path, paste0( yi$`Measuring Date`[1],"_DSandC_box.png" )))
+      
+      
+      return(box)}})
+
+#DS only boxplots
+
+
+boxplots_path<-"C:/Users/HabisohnC/Desktop/DigAB/plots/DownstreamStatistics_plots/boxplots/DSOnly/"
+
+boxes_TGscore<-
+  lapply(CamData_HConly_melt, function(yi){
+    if(!is.null(yi)){
+      
+     
+      ya<-yi%>%dplyr::filter(Condition=="Drought stress")
+            
+      boxa<-ggplot(ya, aes(x=variable, y=value,color=TG_score))+geom_boxplot()+
+        labs(title=paste0("Drought stress ", yi$`Measuring Date`[1]))+
+        theme(axis.text.x = element_text(angle=90, vjust=0.5, size=9))
+      
+      ggsave(boxa, filename=paste0(boxplots_path, paste0( yi$`Measuring Date`[1],"_DS_box.png" )))
+      
+      
+      return(box)}})
+
+#Seperate HC Indices um Darstellung zu verbessern:
+#NDVI, OSAVI, SIPI
+
+boxplots_path<-"C:/Users/HabisohnC/Desktop/DigAB/plots/DownstreamStatistics_plots/boxplots/selects1/"
+
+boxes_TGscore<-
+  lapply(CamData_HConly_melt, function(yi){
+    if(!is.null(yi)){
+      
+     
+      ya<-yi%>%dplyr::filter(Condition=="Drought stress")%>%dplyr::filter(variable=="NDVI-avg"| variable=="OSAVI-avg")
+            
+      boxa<-ggplot(ya, aes(x=variable, y=value,color=TG_score))+geom_boxplot()+ylim(min(ya$value), max(ya$value))+
+        labs(title=paste0("Drought stress ", yi$`Measuring Date`[1]))+
+        theme(axis.text.x = element_text(angle=90, vjust=0.5, size=9))
+      
+      yb<-yi%>%dplyr::filter(Condition=="Control")%>%dplyr::filter(variable=="NDVI-avg"| variable=="OSAVI-avg")
+      
+      boxb<-ggplot(yb, aes(x=variable, y=value,color=TG_score))+geom_boxplot()+ylim(min(ya$value), max(ya$value))+
+        labs(title=paste0("Control ", yi$`Measuring Date`[1]))+
+        theme(axis.text.x = element_text(angle=90, vjust=0.5, size=9))
+      
+      boxi<-ggarrange(boxa,boxb,
+                nrow=1, ncol=2, legend = "top", heights=c(0.75,0.75))
+      
+     # ggsave(boxi, filename=paste0(boxplots_path, paste0( yi$`Measuring Date`[1],"_DSandC_box.png" )))
+      
+      
+      return(boxi)}})
+
+
+
+
+#####MCARI
+
+boxplots_path<-"C:/Users/HabisohnC/Desktop/DigAB/plots/DownstreamStatistics_plots/boxplots/selects2/"
+
+boxes_TGscore<-
+  lapply(CamData_HConly_melt, function(yi){
+    if(!is.null(yi)){
+      
+     
+      ya<-yi%>%dplyr::filter(Condition=="Drought stress")%>%dplyr::filter(variable=="MCARI1-avg")
+            
+      boxa<-ggplot(ya, aes(x=variable, y=value,color=TG_score))+geom_boxplot()+
+        labs(title=paste0("Drought stress ", yi$`Measuring Date`[1]))
+      
+      yb<-yi%>%dplyr::filter(Condition=="Control")%>%dplyr::filter(variable=="MCARI1-avg")
+      
+      boxb<-ggplot(yb, aes(x=variable, y=value,color=TG_score))+geom_boxplot()+
+        labs(title=paste0("Control ", yi$`Measuring Date`[1]))
+      
+      boxi<-ggarrange(boxa,boxb,
+                nrow=1, ncol=2, legend = "top", heights=c(0.75,0.75))
+      
+      ggsave(boxi, filename=paste0(boxplots_path, paste0( yi$`Measuring Date`[1],"_DSandC_box.png" )))
+      
+      
+      return(box)}})
+
+######NDVI2, PRI,PSRI
+
+
+boxplots_path<-"C:/Users/HabisohnC/Desktop/DigAB/plots/DownstreamStatistics_plots/boxplots/selects3/"
+
+boxes_TGscore<-
+  lapply(CamData_HConly_melt, function(yi){
+    if(!is.null(yi)){
+      
+     
+      ya<-yi%>%dplyr::filter(Condition=="Drought stress")%>%dplyr::filter(variable=="PRI-avg"| variable=="PSRI-avg"| variable=="NDVI2-avg")
+            
+      boxa<-ggplot(ya, aes(x=variable, y=value,color=TG_score))+geom_boxplot()+
+        labs(title=paste0("Drought stress ", yi$`Measuring Date`[1]))+
+        theme(axis.text.x = element_text(angle=90, vjust=0.5, size=9))
+      
+      yb<-yi%>%dplyr::filter(Condition=="Control")%>%dplyr::filter(variable=="PRI-avg"| variable=="PSRI-avg"| variable=="NDVI2-avg")
+      
+      boxb<-ggplot(yb, aes(x=variable, y=value,color=TG_score))+geom_boxplot()+
+        labs(title=paste0("Control ", yi$`Measuring Date`[1]))+
+        theme(axis.text.x = element_text(angle=90, vjust=0.5, size=9))
+      
+      boxi<-ggarrange(boxa,boxb,
+                nrow=1, ncol=2, legend = "top", heights=c(0.75,0.75))
+      
+      ggsave(boxi, filename=paste0(boxplots_path, paste0( yi$`Measuring Date`[1],"_DSandC_box.png" )))
+      
+      
+      return(box)}})
+
+
+
+
+
+
+##################boxplots nach Index getrennt, x achse ist der TG score die beiden Gruppen sind im Vergleich
+
+
+boxplots_path_cond<-"C:/Users/HabisohnC/Desktop/DigAB/plots/DownstreamStatistics_plots/boxplots/cond/"
+
+
+boxes_TGscore_CondsamePlots<-
+  lapply(CamData_HConly_melt, function(yi){
+    if(!is.null(yi)){
+      
+     
+      ya<-yi%>%dplyr::filter(variable=="NDVI-avg")
+            
+      boxa<-ggplot(ya, aes(x=TG_score, y=value,fill=Condition))+geom_boxplot()+ylim(min(ya$value), max(ya$value))+
+        labs(title=paste0("NDVI ", yi$`Measuring Date`[1]))+
+        theme(axis.text.x = element_text(angle=90, vjust=0.5, size=9))+
+    scale_fill_manual(values = c("Control"="turquoise3", 
+                                 "Drought stress"="coral"))
+      
+      yb<-yi%>%dplyr::filter(variable=="OSAVI-avg")
+      
+      boxb<-ggplot(yb, aes(x=TG_score, y=value,fill=Condition))+geom_boxplot()+ylim(min(yb$value), max(yb$value))+
+        labs(title=paste0("OSAVI ", yi$`Measuring Date`[1]))+
+        theme(axis.text.x = element_text(angle=90, vjust=0.5, size=9))+
+    scale_fill_manual(values = c("Control"="turquoise3", 
+                                 "Drought stress"="coral"))
+      
+      boxi<-ggarrange(boxa,boxb,
+                nrow=1, ncol=2, legend = "top", heights=c(0.75,0.75))
+      
+     ggsave(boxi, filename=paste0(boxplots_path_cond, paste0( yi$`Measuring Date`[1],"_NDVI_OSAVI.png" )))
+      
+      
+      return(boxi)}})
+
+
+
+
+
+##################boxplots nach Index getrennt, x achse ist der TG score die beiden Gruppen sind im Vergleich
+
+
+
+boxplots_path_cond2<-"C:/Users/HabisohnC/Desktop/DigAB/plots/DownstreamStatistics_plots/boxplots/cond2/new_scoreDistribution/new/"
+
+boxes_TGscore_CondsamePlots<-
+  lapply(CamData_HConly_melt, function(yi){
+    if(!is.null(yi)){
+      
+     
+      ya<-yi%>%dplyr::filter(variable=="MCARI1-avg")
+            
+      boxa<-ggplot(ya, aes(x=TG_score, y=value,fill=Condition))+geom_boxplot()+ylim(min(ya$value), max(ya$value))+
+        labs(title=paste0("MCARI1 ", yi$`Measuring Date`[1]))+
+        theme(axis.text.x = element_text(angle=90, vjust=0.5, size=9))+
+    scale_fill_manual(values = c("Control"="turquoise3", 
+                                 "Drought stress"="coral"))
+      
+      yb<-yi%>%dplyr::filter(variable=="PRI-avg")
+      
+      boxb<-ggplot(yb, aes(x=TG_score, y=value,fill=Condition))+geom_boxplot()+ylim(min(yb$value), max(yb$value))+
+        labs(title=paste0("PRI ", yi$`Measuring Date`[1]))+
+        theme(axis.text.x = element_text(angle=90, vjust=0.5, size=9))+
+    scale_fill_manual(values = c("Control"="turquoise3", 
+                                 "Drought stress"="coral"))
+      
+      boxi<-ggarrange(boxa,boxb,
+                nrow=1, ncol=2, legend = "top", heights=c(0.75,0.75))
+      
+     ggsave(boxi, filename=paste0(boxplots_path_cond2, paste0( yi$`Measuring Date`[1],"_MCARI_PRI.png" )))
+      
+      
+      return(boxi)}})
+
+
+
+
+
+boxplots_path_allInd<-"C:/Users/HabisohnC/Desktop/DigAB/plots/DownstreamStatistics_plots/boxplots/allind/selections/select1/"
+
+boxes_TGscore_CondsamePlots<-
+  lapply(CamData_HConly_melt, function(yi){
+    if(!is.null(yi)){
+      
+      ya<-yi%>%dplyr::filter(variable=="MCARI1-avg" )
+      
+            
+      boxa<-ggplot(ya, aes(x=variable, y=value,fill=Condition))+geom_boxplot()+ylim(min(ya$value), max(ya$value))+
+        labs(title=paste0("MCARI $ PRI", yi$`Measuring Date`[1]))+
+        theme(axis.text.x = element_text(angle=90, vjust=0.5, size=9))+
+    scale_fill_manual(values = c("Control"="turquoise3", 
+                                 "Drought stress"="coral"))
+      
+      
+      
+      yb<-yi%>%dplyr::filter(variable=="PRI-avg")
+      
+      boxb<-ggplot(yb, aes(x=variable, y=value,fill=Condition))+geom_boxplot()+ylim(min(yb$value), max(yb$value))+
+        labs(title=paste0("PRI ", yi$`Measuring Date`[1]))+
+        theme(axis.text.x = element_text(angle=90, vjust=0.5, size=9))+
+    scale_fill_manual(values = c("Control"="turquoise3", 
+                                 "Drought stress"="coral"))
+      
+      boxi<-ggarrange(boxa,boxb,
+                nrow=1, ncol=2, legend = "top", heights=c(0.75,0.75))
+      
+      
+     ggsave(boxi, filename=paste0(boxplots_path_allInd, paste0( yi$`Measuring Date`[1],"_MCARI_PRI.png" )))
+      
+      
+      return(boxi)}})
+
+
+
+
+
+
+
+boxplots_path_allInd<-"C:/Users/HabisohnC/Desktop/DigAB/plots/DownstreamStatistics_plots/boxplots/allind/selections/select2/"
+
+boxes_TGscore_CondsamePlots<-
+  lapply(CamData_HConly_melt, function(yi){
+    if(!is.null(yi)){
+      
+      ya<-yi%>%dplyr::filter(variable=="NDVI-avg" | variable=="OSAVI-avg")
+      
+            
+      boxa<-ggplot(ya, aes(x=variable, y=value,fill=Condition))+geom_boxplot()+ylim(min(ya$value), max(ya$value))+
+        labs(title=paste0("NDVI & OSAVI ", yi$`Measuring Date`[1]))+
+        theme(axis.text.x = element_text(angle=90, vjust=0.5, size=9))+
+    scale_fill_manual(values = c("Control"="turquoise3", 
+                                 "Drought stress"="coral"))
+      
+      
+      
+      #yb<-yi%>%dplyr::filter(variable=="OSAVI-avg")
+      
+      #boxb<-ggplot(yb, aes(x=variable, y=value,fill=Condition))+geom_boxplot()+ylim(min(yb$value), max(yb$value))+
+      #  labs(title=paste0("OSAVI ", yi$`Measuring Date`[1]))+
+       # theme(axis.text.x = element_text(angle=90, vjust=0.5, size=9))+
+   # scale_fill_manual(values = c("Control"="turquoise3", 
+                                # "Drought stress"="coral"))
+      
+     # boxi<-ggarrange(boxa,boxb,
+               # nrow=1, ncol=2, legend = "top", heights=c(0.75,0.75))
+      
+      
+     ggsave(boxa, filename=paste0(boxplots_path_allInd, paste0( yi$`Measuring Date`[1],"_NDVI_OSAVI.png" )))
+      
+      
+      return(boxa)}})
+
+
+
+
+```
+
+Biplots with selected Parameters (Indices, colours,etc.....) -\> bitte auswählen!!!!
+
+```{r}
+#alle
+
+list_PCAplots_NDVI_Size_MCARI1_TG<-lapply(CamData_Bonitur_TG, function(x){
+  gh<-dplyr::select(x,`NDVI-avg`, `Size-avg`,`MCARI1-avg`,TG)
+  y<-gh[,which(apply(gh, 2, var)!=0)]
+  p<-prcomp(dplyr::select(y, where(is.numeric)), scale.=TRUE)
+  p$date<-x$`Measuring Date`[1]
+  
+  plottings<-ggbiplot::ggbiplot(p, groups=x$Condition, colour=x$Condition, fill=X$Condition, ellipse = TRUE, circle = FALSE)+labs(title=p$date)+
+  labs(fill = "Condition",color = "Condition")+
+    scale_colour_manual(name="Condition", values=c("turquoise","coral"))+
+  scale_fill_manual(name="Condition", values=c( "turquoise","coral"))
+  
+  return(plottings)
+})
+ 
+
+
+```
+
+Anovas und posthocs
+
+```{r}
+
+source("anovas.R",local = knitr::knit_global())
+
+
+
+
+#NDVI
+
+anovasNDVIposthocs_rbound<-do.call("rbind", list_anovas_NDVI_allPosthocs)
+Mean_emmean_Groups<-anovasNDVIposthocs_rbound%>%group_by(Date, Condition)%>%
+  summarise(Mean=mean(emmean), SD=sd(emmean))
+
+ggplot(Mean_emmean_Groups, aes(x=Date, y=Mean, colour=Condition, group=Condition))+
+  geom_point()+geom_line()+
+  geom_errorbar(aes(ymin=Mean-SD, ymax=Mean+SD), width=.2)+
+  ylab("Mean estimated marginal mean (EMM)")+labs(title="NDVI Anova (emmeans)")+theme_bw()+
+  theme(axis.text.x = element_text(angle=75, hjust=1.1), 
+        axis.title.x = element_text(hjust=1.05))+
+  scale_colour_manual(values = c("Control"="turquoise3", 
+                                 "Drought stress"="coral"))
+
+
+#Size
+
+
+anovasSizeposthocs_rbound<-do.call("rbind", list_anovas_Size_allPosthocs)
+Mean_emmean_Groups_Size<-anovasSizeposthocs_rbound%>%group_by(Date, Condition)%>%
+  summarise(Mean=mean(emmean), SD=sd(emmean))
+
+ggplot(Mean_emmean_Groups_Size, aes(x=Date, y=Mean, colour=Condition, group=Condition))+
+  geom_point()+geom_line()+
+  geom_errorbar(aes(ymin=Mean-SD, ymax=Mean+SD), width=.2)+
+  ylab("Mean estimated marginal mean (EMM)")+labs(title="Size Anova (emmeans)")+theme_bw()+
+  theme(axis.text.x = element_text(angle=75, hjust=1.1), 
+        axis.title.x = element_text(hjust=1.05))+
+  scale_colour_manual(values = c("Control"="turquoise3", 
+                                 "Drought stress"="coral"))
+
+
+#MCARI1
+
+
+anovasMCARI1eposthocs_rbound<-do.call("rbind", list_anovas_MCARI1_allPosthocs)
+Mean_emmean_Groups_MCARI1<-anovasMCARI1eposthocs_rbound%>%group_by(Date, Condition)%>%
+  summarise(Mean=mean(emmean), SD=sd(emmean))
+
+ggplot(Mean_emmean_Groups_MCARI1, aes(x=Date, y=Mean, colour=Condition, group=Condition))+
+  geom_point()+geom_line()+
+  geom_errorbar(aes(ymin=Mean-SD, ymax=Mean+SD), width=.2)+
+  ylab("Mean estimated marginal mean (EMM)")+labs(title="MCARI1 Anova (emmeans)")+theme_bw()+
+  theme(axis.text.x = element_text(angle=75, hjust=1.1), 
+        axis.title.x = element_text(hjust=1.05))+
+  scale_colour_manual(values = c("Control"="turquoise3", 
+                                 "Drought stress"="coral"))
+
+#BBCH emmeans plots
+
+
+anovasBBCHposthocs_rbound<-do.call("rbind", list_posthocs_BBCH)
+Mean_emmean_Groups_BBCH<-anovasBBCHposthocs_rbound%>%group_by(Date, Condition)%>%
+  summarise(Mean=mean(emmean), SD=sd(emmean))
+
+
+ggplot(Mean_emmean_Groups_BBCH, aes(x=Date, y=Mean, colour=Condition, group=Condition))+
+  geom_point()+geom_line()+
+  geom_errorbar(aes(ymin=Mean-SD, ymax=Mean+SD), width=.2)+
+  ylab("Mean estimated marginal mean (EMM)")+labs(title="BBCH Anova (emmeans)")+theme_bw()+
+  theme(axis.text.x = element_text(angle=75, hjust=1.1), 
+        axis.title.x = element_text(hjust=1.05))+
+  scale_colour_manual(values = c("Control"="turquoise3", 
+                                 "Drought stress"="coral"))
+
+
+
+
+
+```
+
+Group specific plotting of emmeans; verschiedene Varianten, alle nicht sehr gut....
+
+```{r}
+#ich brauche  doch gaR  keine signifikanzlevels mehr zwischen den GRuppen, da meine Anova doch schon gezeigt hat, dass es da einen sign.<unterschied gibt, oder??????
+
+
+ ggboxplot(list_anovas_NDVI_allPosthocs[[8]], x=".group", y="emmean", color="Condition", facet.by = ".group")+stat_compare_means(method="anova")+
+   stat_compare_means(label = "p.signif", method = "t.test",
+                     ref.group = ".all.")
+ 
+ 
+ compare_means(emmean~.group, data=list_anovas_NDVI_allPosthocs[[7]])
+ 
+ ggboxplot(list_anovas_NDVI_allPosthocs[[7]], x=".group", y="emmean", color="Condition")+geom_text(aes(label=Genotype),size=2.5)
+
+ #filter the groups with only one observations from frames:
+ #aber:wollen wir das??????? wir wollen ja sehen, wer von wem unterschiedlich ist!!
+ 
+ df_filtered <- df %>%
+  group_by(.group) %>%
+  filter(n() > 1) %>%
+  ungroup()
+ 
+ #also ich muss die Gruppen mit nur einem Bewohner entferne, da ich aus einem Wert keinen p-value berechnen kann über die distribution der Werte......
+ 
+ grouped_ggbetweenstats(data=list_anovas_NDVI_allPosthocs[[8]] %>%group_by(.group) %>% filter(n() > 1) %>%ungroup(),x=.group, y=emmean,grouping.var=Condition )
+```

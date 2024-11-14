@@ -1,0 +1,45 @@
+{r}
+
+#wie mit Eva besprochen, die Einteilung der TG in 3 sparten, diese als Info für die boxplots:
+#erstmal der dataframe:
+
+weizenernte_sorted<-weizenernte[order(weizenernte$TG),]
+
+weizenernte_sorted_DS<-weizenernte_sorted%>%
+  inner_join(metatable_slim, by="Plant ID")%>%dplyr::filter(Condition=="Drought stress")
+
+splitsize<-nrow(weizenernte_sorted)%/% 3
+splitsize_DS<-nrow(weizenernte_sorted_DS)%/% 3
+
+
+
+weizenernte_sorted_DS$TG_score<-c(rep("low", splitsize_DS),
+                                  rep("medium", splitsize_DS),
+                                  rep("high", splitsize_DS))
+
+CamData_Bonitur_TG_DSscored<-lapply(CamData_Bonitur_TG_DS,
+                                    function(pi){inner_join(pi,
+                        dplyr::select(weizenernte_sorted_DS, `Plant ID`, TG_score), by="Plant ID")})
+
+
+#jetzt die clusterInfo aus kmeans und die TG_score Info gemeinsam beifügen:
+
+Dataframes_withClusterinfo_TGscore<-lapply(Dataframes_withClusterinfo, function(add){if(!is.null(add)){
+  new_dfscore<-add%>%inner_join(dplyr::select(weizenernte_sorted, `Plant ID`, TG_score), by="Plant ID")
+  return(new_dfscore)}
+})
+
+
+#contingency tables TG_score and cluster
+for(i in Dataframes_withClusterinfo_TGscore){
+  if(!is.null(i)==TRUE){
+    print(i$`Measuring Date`[1])
+    print(table(i[, (ncol(i)-1):ncol(i)]))}}
+
+#nur um zu ziegen.dass es geht, das darszustellen, mal schauen, was man da so machen kann:
+
+#hist(weizenernte$TG, breaks=20, labels=weizenernte$`Plant ID`)
+
+
+
+###
