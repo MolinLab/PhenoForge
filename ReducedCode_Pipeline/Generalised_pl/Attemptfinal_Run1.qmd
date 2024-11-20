@@ -2,6 +2,8 @@
 title: "Pipeline_results"
 format: html
 editor: visual
+execute: 
+  echo: false
 ---
 
 libraries:
@@ -12,7 +14,11 @@ libraries:
 
 
 
-requiredPackages<-c("readxl","tidyverse","reshape2","stringr","sjmisc","ggpubr","matrixStats", "gridExtra","corrplot","nlme","lme4","car","emmeans","multcomp","multcompView", "lmtest","GGally","RColorBrewer","MultivariateRandomForest", "multivar","randomForestSRC")
+requiredPackages<-c("readxl",
+                    "tidyverse",
+                    "reshape2",
+                    "stringr",
+                    "sjmisc","ggpubr","matrixStats", "gridExtra","corrplot","nlme","lme4","car","emmeans","multcomp","multcompView", "lmtest","GGally","RColorBrewer","MultivariateRandomForest", "multivar","randomForestSRC", "rsample","ggsci","corrr","ggcorrplot","FactoMineR","vcd","factoextra","rfPermute","ggfortify","agricolae","randomForest","stats","ade4","magrittr","cluster","ggstatsplot","rstatix")
 
 for(package in requiredPackages){
   if(!requireNamespace(package, quietly=TRUE))
@@ -59,6 +65,12 @@ library(ggfortify)
 library(agricolae)
 library(randomForest)
 library(stats)
+library(ade4)
+library(magrittr)
+library(cluster)
+library(ggstatsplot)
+library(rstatix)
+
 ```
 
 Block 1:
@@ -73,7 +85,7 @@ I nbeed to check, whether and if so, how, one includes the file in th project, h
 
 -\> here package;
 
-```{r}
+```{r, warning=FALSE, message=FALSE}
 source("functions_updated.R", local = knitr::knit_global() )
 source("datawrangling1.R", local = knitr::knit_global() )
 source("metatable.R", local = knitr::knit_global() )
@@ -90,7 +102,7 @@ Plots, plots, and more plots ....
 
 ## **Plots Index of Genotypes, Mean of Conditions**
 
-```{r}
+```{r, warning=FALSE, message=FALSE}
 
 path_plotaverage<-"C:/Users/HabisohnC/Desktop/DigAB/plots/geno_meanCondition/"
 
@@ -152,7 +164,7 @@ for(i in 1:length(list_mean_sd_INDICES)){
 
 ## Plots Average over Condition per Index
 
-```{r}
+```{r, warning=FALSE, message=FALSE}
 
 
 ############replacement code für redundant code unten:
@@ -183,7 +195,7 @@ list_plots_meanOVERCondition<-lapply(list_meanOVERCondition, function(p){p%>%ggp
 
 ## **Plots all Genotypes per Index**
 
-```{r}
+```{r, warning=FALSE, message=FALSE}
 
 for(i in list_indices_by_loop){ggplot(i, aes(x=as.Date(`Measuring Date`, format="%Y-%m-%d"), y=value, color=Condition))+
     ylab(paste0(i$variable[1]))+xlab("Date")+labs(title=paste0(i$variable[1])," all Genotypes")+
@@ -217,7 +229,7 @@ Block 3:
 
 die source files muss ich noch checken, ob ich die nicht früher schon wo dazu tun könnte, bei obigem source Teil ...
 
-```{r}
+```{r, warning=FALSE, message=FALSE}
 
 
 source("manualFiles.R",local = knitr::knit_global())
@@ -226,28 +238,11 @@ source("datawrangling_statistics.R",local = knitr::knit_global())
 #source script "MatrixTranspo" erstellt die dataframes  Genotype_allHc_Indexcolumns und Genotype_allHC_Datescolumns die ich für die statistik verwende
 
 
-
-library(corrr)
-library(ggcorrplot)
-library(FactoMineR)
-library(vcd)
-library(factoextra)
-library(rfPermute)
-library(ggfortify)
-library(agricolae)
-library(randomForest)
-library(stats)
-library(factoextra)
-library(ade4)
-library(magrittr)
-library(cluster)
-library(ggstatsplot)
-
 ```
 
 Korrelogramme
 
-```{r}
+```{r, warning=FALSE, message=FALSE}
 
 
 path_plotsDownstream<-"C:/Users/HabisohnC/Desktop/DigAB/plots/DownstreamStatistics_plots/korrelogramme/"
@@ -314,7 +309,7 @@ Es muss dann auch auf das Stadium des Experiments Rücksicht genommen werde, ich
 
 Boxplots (bitte auswählen!!!)
 
-```{r}
+```{r, warning=FALSE, message=FALSE}
 #Boxplots HC only data with TG_score seperation for both Conditions:
 
 
@@ -620,7 +615,7 @@ boxes_TGscore_CondsamePlots<-
 
 Biplots with selected Parameters (Indices, colours,etc.....) -\> bitte auswählen!!!!
 
-```{r}
+```{r, warning=FALSE, message=FALSE}
 #alle
 
 list_PCAplots_NDVI_Size_MCARI1_TG<-lapply(CamData_Bonitur_TG, function(x){
@@ -643,7 +638,7 @@ list_PCAplots_NDVI_Size_MCARI1_TG<-lapply(CamData_Bonitur_TG, function(x){
 
 Anovas und posthocs
 
-```{r}
+```{r, warning=FALSE, message=FALSE}
 
 source("anovas.R",local = knitr::knit_global())
 
@@ -722,30 +717,38 @@ ggplot(Mean_emmean_Groups_BBCH, aes(x=Date, y=Mean, colour=Condition, group=Cond
 
 ```
 
-Group specific plotting of emmeans; verschiedene Varianten, alle nicht sehr gut....
+plotting the groups for the relevant posthoc tests with p-values:
 
-```{r}
+hier wäre noch user interaction gut, auszuwählen welchen posthhoc test ich plotten will:
 
-#Hier muss ich noch schauen, wie ich das am betsen löse, die Gruppen mit nur einer observation machen hier Probleme beim plotten....
+```{r, warning=FALSE, message=FALSE}
+#erstmal NDVI:
 
- ggboxplot(list_anovas_NDVI_allPosthocs[[8]], x=".group", y="emmean", color="Condition", facet.by = ".group")
- #+stat_compare_means(method="anova")+
-  # stat_compare_means(label = "p.signif", method = "t.test",
-                     #ref.group = ".all.")
- 
- 
- compare_means(emmean~.group, data=list_anovas_NDVI_allPosthocs[[7]])
- 
- ggboxplot(list_anovas_NDVI_allPosthocs[[7]], x=".group", y="emmean", color="Condition")+geom_text(aes(label=Genotype),size=2.5)
-
-
- 
- df_filtered <- df %>%
+lapply(list_anovas_NDVI_allPosthocs, function(z){
+  
+  df_filtered <- z %>%dplyr::filter(Condition=="Drought stress")%>%
   group_by(.group) %>%
   filter(n() > 1) %>%
   ungroup()
- 
- #also ich muss die Gruppen mit nur einem Bewohner entferne, da ich aus einem Wert keinen p-value berechnen kann über die distribution der Werte......
- 
- grouped_ggbetweenstats(data=list_anovas_NDVI_allPosthocs[[8]] %>%group_by(.group) %>% filter(n() > 1) %>%ungroup(),x=.group, y=emmean,grouping.var=Condition )
+  
+  if(length(unique(df_filtered$.group))>1){
+  
+  
+  stat_test<-df_filtered%>%group_by(".group")%>%t_test(emmean~.group)%>%mutate(y.position = max(z$emmean))
+  
+  print(ggplot(z, aes(x=.group, y=emmean, color=Condition))+geom_boxplot()+labs(title= z$Date[1],x="group")+
+    stat_pvalue_manual(stat_test, label = "p", y.position = "y.position", step.increase = .1)+
+  scale_colour_manual(values = c("Control"="turquoise3", 
+                                 "Drought stress"="coral"))+theme_bw())
+
+  } else{
+    
+    
+    print(ggplot(z, aes(x=.group, y=emmean, color=Condition))+geom_boxplot()+labs(title= z$Date[1], x="group")+
+  scale_colour_manual(values = c("Control"="turquoise3", 
+                                 "Drought stress"="coral"))+theme_bw())
+
+}
+  
+})
 ```

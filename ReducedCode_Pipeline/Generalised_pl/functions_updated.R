@@ -78,19 +78,12 @@ join_and_calc<-function(x){
     summarise_at(vars(value), list(Mean=mean, SD=sd))%>%mutate(Date=x$'Measuring Date'[1])
 }
 
-join_and_calcDate<-function(x){
-  x%>%
-    inner_join(dplyr::select(metatable, -'Tray Info'),
-               by="Plant.ID")%>%group_by('Measuring Date', Condition)%>%
-    summarise_at(vars(value), list(Mean=mean, SD=sd))
-}
-
 
 
 
 select_indices<-function(x,y){
-  result<-lapply(x, function(z){
-    z%>%filter(variable==y)})
+ result<-lapply(x, function(z){
+   z%>%filter(variable==y)})
   
   return(result)
 }
@@ -102,25 +95,6 @@ indices.to.list<-function(x,y){element101<-list_meltTables_Named[which(names(lis
 return(element101)}
 
 
-select_date<-function(x,y){
-  result<-lapply(x, function(z){
-    z%>%filter(Measuring.Date==y)
-  })
-  return(result)
-}
-
-select_columns<-function(x,y){
-  result<-lapply(x, function(z){
-    z%>%select(all_of(y))})
-  return(result)
-}
-
-select_condition<-function(x,y){
-  result<-lapply(x, function(z){
-    z%>%filter(Condition==y)})
-  
-  return(result)
-}
 
 
 testing_fun<-function(x,z){x%>%slice(grep(z, Genotype))}
@@ -335,115 +309,3 @@ split_dataframe <- function(df, column) {
   return(split_list)
 }
 ##################################################################
-
-
-##################################################################
-#random forests loops
-#####Indices and Genotypes from Dates
-create_Geno_rfs<-function(df_list){
-  
-  list_Geno_rf<-list()
-  list_TG_rf<-list()
-  
-  pip<-lapply(df_list, function(df){
-    
-    rf_name<-paste0("rfGeno",gsub("-", "",df$Index[1]))
-    rf_Index_Geno <- rfsrc(Genotype ~ .,
-                           data = dplyr::select(df,Condition,Genotype,
-                                                where(is.numeric)),
-                           ntree=999, importance = TRUE)
-    #assign(rf_name, rf_Index_Geno, envir= .GlobalEnv)
-    
-  })
-  names(pip)<-list_indices_Hc
-  return(pip)
-}
-
-
-create_TG_rfs<-function(df_list){
-  
-  list_Geno_rf<-list()
-  list_TG_rf<-list()
-  
-  pip<-lapply(df_list, function(df){
-    
-    rf_name<-paste0("rfTG",gsub("-", "",df$Index[1]))
-    rf_Index_Geno <- rfsrc(TG ~ .,
-                           data = dplyr::select(df,Condition,Genotype,
-                                                where(is.numeric)),
-                           ntree=999, importance = TRUE)
-    #assign(rf_name, rf_Index_Geno, envir= .GlobalEnv)
-    
-  })
-  names(pip)<-list_indices_Hc
-  return(pip)
-}
-
-
-
-#####genotypes from Indices
-
-
-create_TG_rfs_GenoIndex<-function(df_list){
-  
-  list_Geno_rf<-list()
-  list_TG_rf<-list()
-  
-  pip<-lapply(df_list, function(df){
-    
-    rf_name<-paste0("rfTG",gsub("-", "",df$Genotype[1]))
-    rf_Index_Geno <- rfsrc(TG ~ .,
-                           data = dplyr::select(df,Condition,
-                                                where(is.numeric)),
-                           ntree=999, importance = TRUE)
-    assign(rf_name, rf_Index_Geno, envir= .GlobalEnv)
-    
-  })
-  names(pip)<-list_of_names
-  return(pip)
-}
-
-#################################
-#nach Condition getrennt: nur DS
-
-create_Geno_rfs_DS<-function(df_list){
-  
-  list_Geno_rf<-list()
-  list_TG_rf<-list()
-  
-  pip<-lapply(df_list, function(df){
-    
-    rf_name<-paste0("rfGeno",gsub("-", "",df$Index[1]))
-    rf_Index_Geno <- rfsrc(Genotype ~ .,
-                           data = dplyr::select(df,Genotype,
-                                                where(is.numeric)),
-                           ntree=999, importance = TRUE)
-    #assign(rf_name, rf_Index_Geno, envir= .GlobalEnv)
-    
-  })
-  names(pip)<-list_indices_Hc
-  return(pip)
-}
-
-
-########
-
-
-create_TG_rfs_DS<-function(df_list){
-  
-  list_Geno_rf<-list()
-  list_TG_rf<-list()
-  
-  pip<-lapply(df_list, function(df){
-    
-    rf_name<-paste0("rfTG",gsub("-", "",df$Index[1]))
-    rf_Index_Geno <- rfsrc(TG ~ .,
-                           data = dplyr::select(df,Genotype,
-                                                where(is.numeric)),
-                           ntree=999, importance = TRUE)
-    #assign(rf_name, rf_Index_Geno, envir= .GlobalEnv)
-    
-  })
-  names(pip)<-list_indices_Hc
-  return(pip)
-}
