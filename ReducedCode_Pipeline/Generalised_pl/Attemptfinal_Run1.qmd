@@ -92,6 +92,7 @@ source("metatable.R", local = knitr::knit_global() )
 source("datawrangling2.R", local = knitr::knit_global() )
 source("datawrangling3.R", local = knitr::knit_global() )
 source("watertable.R", local = knitr::knit_global() )
+source("metaData_GC_plotting.R", local = knitr::knit_global() )
 ```
 
 Block 2:
@@ -106,8 +107,7 @@ Plots, plots, and more plots ....
 
 path_plotaverage<-"C:/Users/HabisohnC/Desktop/DigAB/plots/geno_meanCondition/"
 
-begin<-as.Date("2024-02-12",  format="%Y-%m-%d")
-end<-as.Date("2024-03-01",  format="%Y-%m-%d")
+
 
 
 #naming the dfs in the list of HC indices
@@ -160,6 +160,7 @@ for(i in 1:length(list_mean_sd_INDICES)){
   
   }
 
+
 ```
 
 ## Plots Average over Condition per Index
@@ -191,6 +192,7 @@ list_plots_meanOVERCondition<-lapply(list_meanOVERCondition, function(p){p%>%ggp
   # ggsave(file=paste0(path_plotaverage, paste0(p$Index[1], "_average.png")))
   })
 
+list_plots_meanOVERCondition
 ```
 
 ## **Plots all Genotypes per Index**
@@ -211,9 +213,17 @@ for(i in list_indices_by_loop){ggplot(i, aes(x=as.Date(`Measuring Date`, format=
   #ggsave(filename = paste0(path_plotaverage,paste0(i$variable[1]),"_allGenotypes.png"))
   }
 
+
 ```
 
-#removed the water duo plots, water information will be plotted in meta-plot-\>TODO!!!!!!
+Chamber meta data
+
+```{r}
+#| fig-width: 8
+#| fig-height: 12
+
+all5
+```
 
 \###########################################################
 
