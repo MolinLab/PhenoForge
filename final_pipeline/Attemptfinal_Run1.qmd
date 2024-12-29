@@ -163,7 +163,7 @@ for(i in list_indices){list_plots_ALL_HC[[length(list_plots_ALL_HC)+1]]<-
   #geom_smooth(aes(color=Condition, group=Condition))+#kommt eventuell weg
   ylab(i$variable[1])+xlab("Date")+labs(title=i$Genotype[1])+
    geom_rect(aes(xmin=as.Date(stress_begin), xmax=as.Date(stress_end),ymin=-Inf,ymax=Inf),fill="lightgrey",alpha=0.02,color="lightgrey")+
-  geom_point(size=1.5)+theme_bw(base_size = 10)+
+  geom_point(size=0.5)+theme_bw(base_size = 5)+
   scale_color_manual(values = c("Control"="turquoise3", 
                                 "Drought stress"="coral"))+
   theme(axis.text.x = element_text(angle=75, hjust=1.2),plot.title = element_text(size=16), 
@@ -227,13 +227,15 @@ path_plotaverage<-"plots/plots_Genotypes_Index/"
 
 for(i in list_indices_by_loop){p<-ggplot(i, aes(x=as.Date(`Measuring Date`, format="%Y-%m-%d"), y=value, color=Condition))+
     ylab(paste0(i$variable[1]))+xlab("Date")+labs(title=paste0(i$variable[1])," all Genotypes")+
-    geom_point(size=1.5)+
+    geom_point(size=0.1)+
      geom_rect(aes(xmin=begin, xmax=end,ymin=-Inf,ymax=Inf),fill="lightgrey",alpha=0.02,color="lightgrey")+
-    theme_bw(base_size = 10)+
+    theme_bw(base_size = 5)+
     scale_color_manual(values = c("Control"="turquoise3", 
                                   "Drought stress"="coral"))+
-    theme(axis.text.x = element_text(angle=90, vjust=0.5, size=9))+
-    geom_smooth(aes(color=Condition, group=Condition))+geom_point()
+    theme(axis.text.x = element_text(angle=90, vjust=0.5, size=5), legend.text=element_text(size=4),
+        legend.title = element_text(size=5),
+        legend.key.size = unit(0.1, "cm"))+
+    geom_smooth(aes(color=Condition, group=Condition))+geom_point(size=0.1)
   print(p)
   #ggsave(filename = paste0(path_plotaverage,paste0(i$variable[1]),"_allGenotypes.pdf"))
   ggsave(filename = paste0(path_plotaverage,paste0(i$variable[1]),"_allGenotypes.png"))
