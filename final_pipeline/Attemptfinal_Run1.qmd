@@ -134,8 +134,6 @@ Plots, plots, and more plots ....
 path_plotaverage<-"plots/plots_mean_indGenotypes_indIndices/"
 
 
-
-
 #naming the dfs in the list of HC indices
 list_INDICES_splitBYName<-lapply(list_of_names, function(b){lapply(list_indices_Hc, function(q){
   list_index<-indices.to.list(q,"Hc_Plant")
@@ -164,7 +162,7 @@ for(i in list_indices){list_plots_ALL_HC[[length(list_plots_ALL_HC)+1]]<-
                 color=Condition))+
   #geom_smooth(aes(color=Condition, group=Condition))+#kommt eventuell weg
   ylab(i$variable[1])+xlab("Date")+labs(title=i$Genotype[1])+
-  # geom_rect(aes(xmin=begin, xmax=end,ymin=-Inf,ymax=Inf),fill="lightgrey",alpha=0.02,color="lightgrey")+
+   geom_rect(aes(xmin=as.Date(stress_begin), xmax=as.Date(stress_end),ymin=-Inf,ymax=Inf),fill="lightgrey",alpha=0.02,color="lightgrey")+
   geom_point(size=1.5)+theme_bw(base_size = 10)+
   scale_color_manual(values = c("Control"="turquoise3", 
                                 "Drought stress"="coral"))+
@@ -193,7 +191,7 @@ for(i in 1:length(list_mean_sd_INDICES)){
 
 ```{r, warning=FALSE, message=FALSE}
 
-
+path_plotaverage<-"plots/plots_mean_Condition/"
 ############replacement code für redundant code unten:
 #neue source Liste: list_indices_byloop
 
@@ -215,7 +213,7 @@ list_plots_meanOVERCondition<-lapply(list_meanOVERCondition, function(p){p%>%ggp
         axis.title.x = element_text(hjust=1),
        axis.text=element_text(size=13),axis.title=element_text(size=14))
   #ggsave(file=paste0(path_plotaverage, paste0(p$Index[1], "_average.pdf")))
-  # ggsave(file=paste0(path_plotaverage, paste0(p$Index[1], "_average.png")))
+   ggsave(file=paste0(path_plotaverage, paste0(p$Index[1], "_average.png")))
   })
 
 list_plots_meanOVERCondition
@@ -224,6 +222,8 @@ list_plots_meanOVERCondition
 ## **Plots all Genotypes per Index**
 
 ```{r, warning=FALSE, message=FALSE}
+
+path_plotaverage<-"plots/plots_Genotypes_Index/"
 
 for(i in list_indices_by_loop){p<-ggplot(i, aes(x=as.Date(`Measuring Date`, format="%Y-%m-%d"), y=value, color=Condition))+
     ylab(paste0(i$variable[1]))+xlab("Date")+labs(title=paste0(i$variable[1])," all Genotypes")+
@@ -235,8 +235,8 @@ for(i in list_indices_by_loop){p<-ggplot(i, aes(x=as.Date(`Measuring Date`, form
     theme(axis.text.x = element_text(angle=90, vjust=0.5, size=9))+
     geom_smooth(aes(color=Condition, group=Condition))+geom_point()
   print(p)
- # ggsave(filename = paste0(path_plotaverage,paste0(i$variable[1]),"_allGenotypes.pdf"))
-  #ggsave(filename = paste0(path_plotaverage,paste0(i$variable[1]),"_allGenotypes.png"))
+  #ggsave(filename = paste0(path_plotaverage,paste0(i$variable[1]),"_allGenotypes.pdf"))
+  ggsave(filename = paste0(path_plotaverage,paste0(i$variable[1]),"_allGenotypes.png"))
   }
 
 

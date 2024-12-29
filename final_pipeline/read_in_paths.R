@@ -15,7 +15,5 @@ weizenernte_full<-read_excel("C:/Users/HabisohnC/Desktop/Folder_StandDerDinge/Ro
 
 #Eingabe Beginn und Ende Trockenstressphase
 
-begin<-as.Date("2024-02-21", format="%Y-%m-%d")
-end<-as.Date("2024-01-03", format="%Y-%m-%d")
-
-
+stress_begin<-"2024-02-21"
+stress_end<-"2024-03-01"
