@@ -1,7 +1,11 @@
 
-#new path for Anovas:"C:/Users/HabisohnC/Desktop/DigAB/Generalised_pl/AnovaslistOutput"
+###################
+###
+#die pfade müssen zum nahtlosen Laufen noch angepasst werden mit create.dir()
+#siehe link:https://stackoverflow.com/questions/4216753/folder-management-with-r-check-existence-of-directory-and-create-it-if-it-does
 
 
+dir.create("Anovas/")
 
 list_anovas_NDVI<-lapply(CamData_Bonitur_TG, function(an){
   
@@ -15,15 +19,15 @@ list_AnovasNDVI_tables<-lapply(list_anovas_NDVI, function(table){
 })
 
 
-for(i in 1:length(list_anovas_NDVI)){
+#for(i in 1:length(list_anovas_NDVI)){
   
-  list_items<-list(names(list_anovas_NDVI[i]), list_anovas_NDVI[[i]], list_AnovasNDVI_tables[[i]])
+ # list_items<-list(names(list_anovas_NDVI[i]), list_anovas_NDVI[[i]], list_AnovasNDVI_tables[[i]])
   
-  capture.output(list_items, file = "C:/Users/HabisohnC/Desktop/DigAB/Anovas/anovasNDVI_allInfo.txt", append = TRUE)
+ # capture.output(list_items, file = "AnovaslistOutput/hegt/NDVI.txt", append = TRUE)
   
-}
+#}
 
-capture.output(list_AnovasNDVI_tables, file = "C:/Users/HabisohnC/Desktop/DigAB/Anovas/anovasNDVI.txt")
+capture.output(list_AnovasNDVI_tables, file = "Anovas/NDVI.txt")
 
 
 
@@ -42,7 +46,7 @@ list_AnovasSize_tables<-lapply(list_anovas_Size, function(table){
   
 })
 
-capture.output(list_AnovasSize_tables, file = "C:/Users/HabisohnC/Desktop/DigAB/Anovas/anovasSize.txt")
+capture.output(list_AnovasSize_tables, file = "Anovas/Size.txt")
 
 
 
@@ -61,7 +65,7 @@ list_AnovasMCARI_tables<-lapply(list_anovas_MCARI, function(table){
   
 })
 
-capture.output(list_AnovasMCARI_tables, file = "C:/Users/HabisohnC/Desktop/DigAB/Anovas/anovasMCARI1.txt")
+capture.output(list_AnovasMCARI_tables, file = "Anovas/MCARI1.txt")
 
 
 
@@ -84,7 +88,7 @@ list_AnovasPRI_tables<-lapply(list_anovas_PRI, function(table){
   
 })
 
-capture.output(list_AnovasPRI_tables, file = "C:/Users/HabisohnC/Desktop/DigAB/Anovas/anovaNDVI.txt")
+capture.output(list_AnovasPRI_tables, file = "Anovas/PRI.txt")
 
 
 #posthoc_2302<-emmeans(, ~ Condition*Genotype)

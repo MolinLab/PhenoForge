@@ -1,0 +1,43 @@
+
+boxes_TGscore<-
+  lapply(CamData_HConly_melt, function(yi){
+    if(!is.null(yi)){
+      
+      
+      ya<-yi%>%dplyr::filter(Condition=="Drought stress")
+      
+      boxa<-ggplot(ya, aes(x=variable, y=value,color=TG_score))+geom_boxplot()+ylim(min(ya$value), max(ya$value))+
+        labs(title=paste0("Drought stress ", yi$`Measuring Date`[1]))+
+        theme(axis.text.x = element_text(angle=90, vjust=0.5, size=9))
+      
+      yb<-yi%>%dplyr::filter(Condition=="Control")
+      
+      boxb<-ggplot(yb, aes(x=variable, y=value,color=TG_score))+geom_boxplot(outlier.size = 0.5)+
+        labs(title=paste0("Control ", yi$`Measuring Date`[1]))+
+        theme(axis.text.x = element_text(angle=90, vjust=0.5, size=9))
+      
+      boxi<-ggarrange(boxa,boxb,
+                      nrow=1, ncol=2, legend = "top", heights=c(0.75,0.75))
+      
+      ggsave(boxi, filename=paste0(boxplots_path, paste0( yi$`Measuring Date`[1],"_DSandC_allIndices.png" )))
+      
+      
+      return(box)}})
+
+
+
+boxes_TGscore<-
+  lapply(CamData_HConly_melt, function(yi){
+    if(!is.null(yi)){
+      
+      
+      boxi<-ggplot(yi, aes(x=variable, y=value,color=TG_score))+geom_boxplot(outlier.size = 0.5)+
+        labs(title=paste0("Control ", yi$`Measuring Date`[1]))+facet_wrap(~Condition)+
+        theme(axis.text.x = element_text(angle=90, vjust=0.5, size=9))
+      
+      
+      
+      ggsave(boxi, filename=paste0(boxplots_path, paste0( yi$`Measuring Date`[1],"_DSandC_allIndices.png" )))
+      
+      
+      return(boxi)}})

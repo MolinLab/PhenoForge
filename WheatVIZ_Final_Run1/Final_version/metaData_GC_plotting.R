@@ -15,10 +15,10 @@ tempandothermeta_2<-tempandothermeta%>%dplyr::select(-Time)
 #meta_meanmaxmin<-inner_join(meta_mean, meta_minmax, by="Date")
 
 #ggplot(meta_meanmaxmin, aes(x=Date))+geom_line(aes(y=Temp1),colour="blue")+
- # geom_line(aes(y=Temp2),colour="yellow")
+# geom_line(aes(y=Temp2),colour="yellow")
 meta_data_mean<-tempandothermeta_2%>%
   mutate(Tempsum=(Temp1+Temp2)/2,
-  RHsum=(RH1+RH2)/2)
+         RHsum=(RH1+RH2)/2)
 
 metad_maxT<-meta_data_mean%>%group_by(Date)%>%
   summarise(across(c(Tempsum,RHsum),max))%>%
@@ -46,17 +46,17 @@ hum<-ggplot(meta_data, aes(x=Date))+geom_rect(aes(xmin=as.Date(stress_begin), xm
 
 oneof3_1<-ggplot(meta_data, aes(x=Date, y=CO2))+scale_y_continuous(name="Mean CO2, [ppm]")+
   geom_rect(aes(xmin=as.Date(stress_begin), xmax=as.Date(stress_end),ymin=-Inf,ymax=Inf),
-        fill="lightgrey",alpha=0.02,color="lightgrey")+geom_line()+xlab(NULL)+
+            fill="lightgrey",alpha=0.02,color="lightgrey")+geom_line()+xlab(NULL)+
   theme(axis.text.y=element_text(size=8))
 
 oneof3_3<-ggplot(meta_data,aes(x=Date, y=RHAvg))+scale_y_continuous(name="Mean Humidity, [%]")+
   geom_rect(aes(xmin=as.Date(stress_begin), xmax=as.Date(stress_end),ymin=-Inf,ymax=Inf),
-  fill="lightgrey",alpha=0.02,color="lightgrey")+
+            fill="lightgrey",alpha=0.02,color="lightgrey")+
   geom_line()+xlab(NULL)+theme(axis.text.y=element_text(size=8))
 
 oneof3_2<-ggplot(meta_data,aes(x=Date, y=TempAvg))+scale_y_continuous(name="Mean T, [°C]")+
   geom_rect(aes(xmin=as.Date(stress_begin), xmax=as.Date(stress_end),ymin=-Inf,ymax=Inf),
-             fill="lightgrey",alpha=0.02,color="lightgrey")+geom_line()+
+            fill="lightgrey",alpha=0.02,color="lightgrey")+geom_line()+
   theme(axis.text.y=element_text(size=8))
 
 water<-ggplot(water_mean, aes(x=as.Date(Date), y=Mean))+xlab("Date")+
@@ -67,7 +67,5 @@ water<-ggplot(water_mean, aes(x=as.Date(Date), y=Mean))+xlab("Date")+
 
 all3<-ggarrange(oneof3_1,oneof3_3,oneof3_2, ncol=1, widths = c(0.5,1))
 all5<-ggarrange(temp,hum, all3,water, ncol=1, common.legend = T,legend = "top", heights = c(1,1,2,1))
-
-
 
 
