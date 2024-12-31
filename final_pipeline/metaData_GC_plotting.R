@@ -32,36 +32,36 @@ meta_data<-tempandothermeta_2%>%group_by(Date)%>%
   summarise(across(c(RHAvg,TempAvg,CO2), mean))%>%
   inner_join(metad_maxT, by="Date")%>%inner_join(metad_minT, by="Date")
 
-temp<-ggplot(meta_data, aes(x=Date))+geom_rect(aes(xmin=begin, xmax=end,ymin=-Inf,ymax=Inf),
+temp<-ggplot(meta_data, aes(x=Date))+geom_rect(aes(xmin=as.Date(stress_begin), xmax=as.Date(stress_end),ymin=-Inf,ymax=Inf),
                                                fill="lightgrey",alpha=0.02,color="lightgrey")+
   geom_line(aes(y=Tempmin, colour="Min"))+ylab("T, [°C]")+geom_line(aes(y=Tempmax, colour="Max"))+
   
   scale_colour_manual(name="Parameter", values=c("Min"="darkblue", "Max"="orange"))
 
-hum<-ggplot(meta_data, aes(x=Date))+geom_rect(aes(xmin=begin, xmax=end,ymin=-Inf,ymax=Inf),
+hum<-ggplot(meta_data, aes(x=Date))+geom_rect(aes(xmin=as.Date(stress_begin), xmax=as.Date(stress_end),ymin=-Inf,ymax=Inf),
                                               fill="lightgrey",alpha=0.02,color="lightgrey")+
   geom_line(aes(y=RHmax, colour="Max"))+
   geom_line(aes(y=RHmin, colour="Min"))+ylab("Humidity, [%]")+
   scale_colour_manual(name="Parameter", values=c("Min"="darkblue", "Max"="orange"))
 
 oneof3_1<-ggplot(meta_data, aes(x=Date, y=CO2))+scale_y_continuous(name="Mean CO2, [ppm]")+
-  geom_rect(aes(xmin=begin, xmax=end,ymin=-Inf,ymax=Inf),
+  geom_rect(aes(xmin=as.Date(stress_begin), xmax=as.Date(stress_end),ymin=-Inf,ymax=Inf),
         fill="lightgrey",alpha=0.02,color="lightgrey")+geom_line()+xlab(NULL)+
   theme(axis.text.y=element_text(size=8))
 
 oneof3_3<-ggplot(meta_data,aes(x=Date, y=RHAvg))+scale_y_continuous(name="Mean Humidity, [%]")+
-  geom_rect(aes(xmin=begin, xmax=end,ymin=-Inf,ymax=Inf),
+  geom_rect(aes(xmin=as.Date(stress_begin), xmax=as.Date(stress_end),ymin=-Inf,ymax=Inf),
   fill="lightgrey",alpha=0.02,color="lightgrey")+
   geom_line()+xlab(NULL)+theme(axis.text.y=element_text(size=8))
 
 oneof3_2<-ggplot(meta_data,aes(x=Date, y=TempAvg))+scale_y_continuous(name="Mean T, [°C]")+
-  geom_rect(aes(xmin=begin, xmax=end,ymin=-Inf,ymax=Inf),
+  geom_rect(aes(xmin=as.Date(stress_begin), xmax=as.Date(stress_end),ymin=-Inf,ymax=Inf),
              fill="lightgrey",alpha=0.02,color="lightgrey")+geom_line()+
   theme(axis.text.y=element_text(size=8))
 
 water<-ggplot(water_mean, aes(x=as.Date(Date), y=Mean))+xlab("Date")+
   scale_y_continuous(name="Mean water potential [kPa]")+
-  geom_rect(aes(xmin=begin, xmax=end,ymin=-Inf,ymax=Inf),fill="lightgrey",alpha=0.02,color="lightgrey")+
+  geom_rect(aes(xmin=as.Date(stress_begin), xmax=as.Date(stress_end),ymin=-Inf,ymax=Inf),fill="lightgrey",alpha=0.02,color="lightgrey")+
   geom_line(colour="blue")
 
 
