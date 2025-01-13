@@ -43,4 +43,14 @@ list_RGB_C_hexcodes<-lapply(list_cutRgb_C, triplet_to_colour)
 ####################continue here tomorrow 11.09.: 
 #für alle Indices alle Genotypen splitten (LOOP???)
 
-list_NDVI_splitBYnames<-lapply(list_of_names, testing_fun, x=list_indices_by_loop[["NDVI-avg"]])
+#list_NDVI_splitBYnames<-lapply(list_of_names, testing_fun, x=list_indices_by_loop[["NDVI-avg"]])
+
+
+
+#naming the dfs in the list of HC indices
+list_INDICES_splitBYName<-lapply(list_of_names, function(b){lapply(list_indices_Hc, function(q){
+  list_index<-indices.to.list(q,"Hc_Plant")
+  genotype_list<-testing_fun(list_index,b)
+  return(genotype_list)}
+)})
+names(list_INDICES_splitBYName)<-list_of_names

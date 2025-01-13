@@ -94,14 +94,6 @@ Block 1:
 
 # Data wrangling
 
-#comments:
-
-source files:
-
-I nbeed to check, whether and if so, how, one includes the file in th project, how are scripts/qmds shared and all the dependent files?????? check out!!!
-
--\> here package;
-
 ```{r, warning=FALSE, message=FALSE}
 
 
@@ -133,14 +125,6 @@ dir.create("plots/plots_mean_indGenotypes_indIndices", recursive = TRUE)
 
 path_plotaverage<-"plots/plots_mean_indGenotypes_indIndices/"
 
-
-#naming the dfs in the list of HC indices
-list_INDICES_splitBYName<-lapply(list_of_names, function(b){lapply(list_indices_Hc, function(q){
-  list_index<-indices.to.list(q,"Hc_Plant")
-  genotype_list<-testing_fun(list_index,b)
-  return(genotype_list)}
-)})
-names(list_INDICES_splitBYName)<-list_of_names
 
 
 list_indices<-unlist(list_INDICES_splitBYName, recursive = FALSE)
@@ -374,12 +358,6 @@ lapply(testrunscatter, function(x){
 
  
 ```
-
-Beginn der User Interaction:
-
-Es muss dann auch auf das Stadium des Experiments Rücksicht genommen werde, ich kann keinen TG plot am Anfang des Laufs machen, da hab ich die TG/yield Info noch gar nuícht!
-
-Boxplots (bitte auswählen!!!)
 
 ```{r, warning=FALSE, message=FALSE}
 #Boxplots HC only data with TG_score seperation for both Conditions:
@@ -790,7 +768,7 @@ ggsave(plot_emmeans_BBCH, filename=paste0(path_em, "BBCH.png"))
 
 plotting the groups for the relevant posthoc tests with p-values:
 
-hier wäre noch user interaction gut, auszuwählen welchen posthhoc test ich plotten will:
+h
 
 ```{r, warning=FALSE, message=FALSE}
 
