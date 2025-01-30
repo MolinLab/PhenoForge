@@ -131,7 +131,7 @@ Plots, plots, and more plots ....
 
 ```{r, warning=FALSE, message=FALSE}
 
-path_plotaverage<-"C:/Users/HabisohnC/Desktop/DigAB/plots/geno_meanCondition/"
+#path_plotaverage<-"C:/Users/HabisohnC/Desktop/DigAB/plots/geno_meanCondition/"
 
 
 #list_melt_HC<-lapply(list_cutHc, function(m){
