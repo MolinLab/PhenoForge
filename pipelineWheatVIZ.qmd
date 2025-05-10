@@ -1,0 +1,294 @@
+---
+title: "Report WheatVIZ, January 17th - March 18th"
+format:
+  html:
+    embed-resources: true
+    grid: 
+      body-width: 2000px
+#server: shiny
+editor: visual
+execute: 
+  warning: false
+  message: false
+  echo: false
+---
+
+```{r, warning=FALSE, message=FALSE}
+#| label: load-packages
+#| message: false
+
+
+
+requiredPackages<-c("readxl",
+                    "tidyverse",
+                    "reshape",
+                    "reshape2",
+                    "stringr",
+                    "ggpubr",
+                    "car",
+                    "GGally",
+                    "emmeans","multcomp",
+                    "rstatix",
+                    "stats",
+                    "ggbiplot")
+
+for(package in requiredPackages){
+  if(!requireNamespace(package, quietly=TRUE))
+    install.packages(package)
+}
+
+library(readxl)
+library(tidyverse)
+library(reshape2)
+library(reshape)
+library(stringr)
+library(ggpubr)
+library(car)
+library(sjmisc)
+library(emmeans)
+library(multcomp)
+library(GGally)
+library(rstatix)
+library(stats)
+library(ggbiplot)
+library(cowplot)
+library(factoextra)
+library(ggfortify)
+library(effectsize)
+library(EnvStats)
+
+
+```
+
+```{r, warning=FALSE, message=FALSE}
+source("functions_updated.R", local = knitr::knit_global() )
+source("read_in_paths.R", local = knitr::knit_global() )
+source("metatable.R", local = knitr::knit_global() )
+source("manualFiles.R",local = knitr::knit_global())
+source("datawrangling1.R", local = knitr::knit_global() )
+```
+
+```{r, warning=FALSE, message=FALSE}
+
+source("metaData_GC_plotting.R", local = knitr::knit_global() )
+
+###################
+# Hyperspec
+#####################
+
+source("plots_mean_indGenotypes_indIndices.R", local = knitr::knit_global() )
+ dates<-unique(list_indices[[1]]$`Measuring Date`)
+source("AverageOverConditionperIndex.R", local = knitr::knit_global() )
+
+source("Plots_GenotypesIndex.R", local = knitr::knit_global() )
+
+
+###########################
+#Fluorescence
+###########################
+source("FluoPlots_indGenos_indParams.R", local = knitr::knit_global() )
+source("Fluo_meanAllGenotypes.R", local = knitr::knit_global() )
+source("Fluo_meanoverCondition.R", local = knitr::knit_global() )
+
+
+#################
+#combination
+################
+
+source("combiplots.R", local = knitr::knit_global() )
+
+```
+
+## Growth Chamber Meta-measurements
+
+```{r,fig.height=10,fig.width=15}
+print(all5)
+```
+
+## Hyperpsectral Measurements
+
+### Genotypes
+
+```{r, fig.height=7,fig.width=15}
+#| panel: tabset
+#| output: asis
+
+for(iplot in names(genolist)){
+  cat(sprintf("## %s\n", iplot))
+  for(kplot in genolist[[iplot]]){
+  print(kplot)
+  cat(sprintf("\n\n"))
+  }
+}
+
+```
+
+### Averages
+
+```{r, fig.height=10,fig.width=15}
+#| panel: tabset
+#| output: asis
+
+
+for(iplot in names(combi_graphs)){
+  cat(sprintf("## %s\n", iplot))
+  print(combi_graphs[[iplot]])
+  cat(sprintf("\n\n"))
+}
+
+
+```
+
+## Fluorescence measurements
+
+### Averages
+
+```{r, warning=FALSE, message=FALSE,fig.height=10,fig.width=15}
+#| panel: tabset
+#| output: asis
+
+
+for(iplot in names(combi_graphs_fluo)){
+  cat(sprintf("## %s\n", iplot))
+  print(combi_graphs_fluo[[iplot]])
+  cat(sprintf("\n\n"))
+}
+
+```
+
+```{r, warning=FALSE, message=FALSE}
+##wrangling
+source("addScoreInfo.R",local = knitr::knit_global())
+source("bisect_data.R", local = knitr::knit_global() )
+####################
+##plots
+source("composite_plots.R",local = knitr::knit_global())
+source("scores_boxplots.R", local=knitr::knit_global())
+
+```
+
+## Composite Plots
+
+```{r,warning=FALSE, message=FALSE, fig.height=15,fig.width=20}
+#| panel: tabset
+#| output: asis
+
+
+for(iplot in names(testrunscatter)){
+  cat(sprintf("## %s\n", iplot))
+  print(testrunscatter[[iplot]])
+  cat(sprintf("\n\n"))
+}
+
+```
+
+## Boxplots score
+
+# NDVI
+
+```{r, warning=FALSE, message=FALSE,fig.height=10,fig.width=10}
+#| panel: tabset
+#| output: asis
+
+
+for(iplot in names(boxes_TGscore_CondsamePlots_NDVI)){
+  cat(sprintf("## %s\n", iplot))
+  print(boxes_TGscore_CondsamePlots_NDVI[[iplot]])
+  cat(sprintf("\n\n"))
+}
+
+```
+
+# MCARI1
+
+```{r, warning=FALSE, message=FALSE,fig.height=10,fig.width=10}
+#| panel: tabset
+#| output: asis
+
+
+for(iplot in names(boxes_TGscore_CondsamePlots_MCARI1)){
+  cat(sprintf("## %s\n", iplot))
+  print(boxes_TGscore_CondsamePlots_MCARI1[[iplot]])
+  cat(sprintf("\n\n"))
+}
+
+```
+
+# OSAVI
+
+```{r, warning=FALSE, message=FALSE,fig.height=10,fig.width=10}
+#| panel: tabset
+#| output: asis
+
+
+for(iplot in names(boxes_TGscore_CondsamePlots_OSAVI)){
+  cat(sprintf("## %s\n", iplot))
+  print(boxes_TGscore_CondsamePlots_OSAVI[[iplot]])
+  cat(sprintf("\n\n"))
+}
+
+```
+
+# SIPI
+
+```{r, warning=FALSE, message=FALSE,fig.height=10,fig.width=10}
+#| panel: tabset
+#| output: asis
+
+
+for(iplot in names(boxes_TGscore_CondsamePlots_SIPI)){
+  cat(sprintf("## %s\n", iplot))
+  print(boxes_TGscore_CondsamePlots_SIPI[[iplot]])
+  cat(sprintf("\n\n"))
+}
+
+```
+
+# PRI
+
+```{r, warning=FALSE, message=FALSE,fig.height=10,fig.width=10}
+#| panel: tabset
+#| output: asis
+
+
+for(iplot in names(boxes_TGscore_CondsamePlots_PRI)){
+  cat(sprintf("## %s\n", iplot))
+  print(boxes_TGscore_CondsamePlots_PRI[[iplot]])
+  cat(sprintf("\n\n"))
+}
+
+```
+
+# PSRI
+
+```{r, warning=FALSE, message=FALSE,fig.height=10,fig.width=10}
+#| panel: tabset
+#| output: asis
+
+
+for(iplot in names(boxes_TGscore_CondsamePlots_PSRI)){
+  cat(sprintf("## %s\n", iplot))
+  print(boxes_TGscore_CondsamePlots_PSRI[[iplot]])
+  cat(sprintf("\n\n"))
+}
+
+```
+
+```{r}
+source("NDVI_anova_posthoc_all.R",local = knitr::knit_global())
+#source("anovas.R",local = knitr::knit_global())
+#source("posthoc_NDVI.R",local = knitr::knit_global())
+#source("emmeans.R",local = knitr::knit_global())
+```
+
+## Estimated marginal means
+
+```{r,fig.height=10,fig.width=15}
+print(plot_emmeans_NDVI)
+```
+
+## Differentiated drought stress group
+
+```{r,fig.height=10,fig.width=15}
+print(one_stats)
+```
