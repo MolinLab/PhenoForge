@@ -4,30 +4,30 @@
 ###if folder data is available in the same directory as the code for the pipeline, you may as well use
 #these template paths:
 
-#water_readings2<-
-# read_csv2("data_Round1/metafiles/water_readings_correctDate_1.CSV") #auch dieser Pfad wird in CL übergeben werden
-
-#path_allfiles<-"data_Round1/XLSX"
-
-#tempandothermeta<-read_excel("data_Round1/metafiles/Temperature_andOther_GC.xlsx")
-
-
-#Bonitur_1<-read_excel("data_Round1/metafiles/WheatVIZ_ClimateChamber_2024_Masterfile.xlsx")
-
-#weizenernte_full<-read_excel("data_Round1/metafiles/Weizenernte.xlsx")
-
-
 water_readings2<-
-  read_csv2() #auch dieser Pfad wird in CL übergeben werden
+ read_csv2("data_Round1/metafiles/water_readings_correctDate_1.CSV") #auch dieser Pfad wird in CL übergeben werden
 
-path_allfiles<-
+path_allfiles<-"data_Round1/XLSX"
 
-tempandothermeta<-read_excel()
+tempandothermeta<-read_excel("data_Round1/metafiles/Temperature_andOther_GC.xlsx")
 
 
-Bonitur_1<-read_excel()
+Bonitur_1<-read_excel("data_Round1/metafiles/WheatVIZ_ClimateChamber_2024_Masterfile.xlsx")
 
-weizenernte_full<-read_excel()
+weizenernte_full<-read_excel("data_Round1/metafiles/Weizenernte.xlsx")
+
+
+#water_readings2<-
+  #read_csv2()
+
+#path_allfiles<-
+
+#tempandothermeta<-read_excel()
+
+
+#Bonitur_1<-read_excel()
+
+#weizenernte_full<-read_excel()
 
 
 #Eingabe Beginn und Ende Trockenstressphase

@@ -30,7 +30,12 @@ requiredPackages<-c("readxl",
                     "emmeans","multcomp",
                     "rstatix",
                     "stats",
-                    "ggbiplot")
+                    "ggbiplot",
+                    "cowplot",
+                    "factoextra",
+                    "ggfortify",
+                    "effectsize",
+                    "EnvStats")
 
 for(package in requiredPackages){
   if(!requireNamespace(package, quietly=TRUE))
@@ -163,7 +168,7 @@ source("bisect_data.R", local = knitr::knit_global() )
 ####################
 ##plots
 source("composite_plots.R",local = knitr::knit_global())
-source("scores_boxplots.R", local=knitr::knit_global())
+source("classification_boxplots.R", local=knitr::knit_global())
 
 ```
 
@@ -182,7 +187,7 @@ for(iplot in names(testrunscatter)){
 
 ```
 
-## Boxplots score
+## Boxplots Classifier "Dry weight"
 
 # NDVI
 
@@ -274,21 +279,16 @@ for(iplot in names(boxes_TGscore_CondsamePlots_PSRI)){
 
 ```
 
+## Assumptions check for ANOVAs
+
 ```{r}
+
 source("NDVI_anova_posthoc_all.R",local = knitr::knit_global())
-#source("anovas.R",local = knitr::knit_global())
-#source("posthoc_NDVI.R",local = knitr::knit_global())
-#source("emmeans.R",local = knitr::knit_global())
-```
 
-## Estimated marginal means
-
-```{r,fig.height=10,fig.width=15}
-print(plot_emmeans_NDVI)
 ```
 
 ## Differentiated drought stress group
 
-```{r,fig.height=10,fig.width=15}
+```{r,fig.height=7,fig.width=10}
 print(one_stats)
 ```

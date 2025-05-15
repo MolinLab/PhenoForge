@@ -24,16 +24,16 @@ list_plots_meanOVERCondition_fluo<-lapply(list_meanOVERCondition_fluo, function(
         legend.title = element_text(size=13),
         axis.title.x = element_text(hjust=1, size = 7),
         axis.text=element_text(size=13),axis.title.y=element_text(size=10))
-#ggsave(file=paste0(path_plotaverage, paste0(p$Index[1], "_average.pdf")))
+ggsave(file=paste0(path_plotaverage, paste0(p$Index[1], "_average.pdf")))
 
 
 
-#save_this<-paste0(path_plotaverage, paste0(p$Index[1], "_average.png"))
-# if(file.exists(save_this)){
+save_this<-paste0(path_plotaverage, paste0(p$Index[1], "_average.png"))
+ if(file.exists(save_this)){
 
-#} else {
+} else {
 
 
-#ggsave(plot,file=paste0(path_plotaverage, paste0(p$Index[1], "_average.png")))
-# }
+ggsave(plot,file=paste0(path_plotaverage, paste0(p$Index[1], "_average.png")))
+ }
 return(plot)})

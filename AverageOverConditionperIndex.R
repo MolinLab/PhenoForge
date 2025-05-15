@@ -28,16 +28,16 @@ list_plots_meanOVERCondition<-lapply(list_meanOVERCondition, function(p)
         legend.title = element_text(size=13),
         axis.title.x = element_text(hjust=1, size = 12),
         axis.text=element_text(size=13),axis.title.y=element_text(size=10))
-#ggsave(file=paste0(path_plotaverage, paste0(p$Index[1], "_average.pdf")))
+ggsave(file=paste0(path_plotaverage, paste0(p$Index[1], "_average.pdf")))
 
 return(plot)
 
-#save_this<-paste0(path_plotaverage, paste0(p$Index[1], "_average.png"))
-#if(file.exists(save_this)){
+save_this<-paste0(path_plotaverage, paste0(p$Index[1], "_average.png"))
+if(file.exists(save_this)){
   
-#} else {
+} else {
   
   
- # ggsave(file=paste0(path_plotaverage, paste0(p$Index[1], "_average.png")))
-#}
+  ggsave(file=paste0(path_plotaverage, paste0(p$Index[1], "_average.png")))
+}
 })

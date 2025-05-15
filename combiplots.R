@@ -12,7 +12,7 @@ pathcombi<-"plots/combis/"
 for(i in 1:length(combi_graphs)){
   name<-paste0(pathcombi,paste0(names(combi_graphs[i]), "_combi.png"))
   
-  #ggsave(file=name, plot=combi_graphs[[i]])
+  ggsave(file=name, plot=combi_graphs[[i]])
   }
 
 
@@ -32,6 +32,6 @@ pathcombi<-"plots/combis_fluo/"
 for(i in 1:length(combi_graphs_fluo)){
   name<-paste0(pathcombi,paste0(names(combi_graphs_fluo[i]), "_combi.png"))
   
-  #ggsave(file=name, plot=combi_graphs_fluo[[i]])
+  ggsave(file=name, plot=combi_graphs_fluo[[i]])
   }
 

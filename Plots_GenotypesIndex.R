@@ -15,17 +15,18 @@ list_allgenos<-lapply(list_indices_by_loop, function(i){p<-ggplot(i, aes(x=as.Da
         legend.title = element_text(size=5),
         legend.key.size = unit(0.1, "cm"))+
   geom_smooth(aes(color=Condition, group=Condition))+geom_point(size=0.5)
+ggsave(filename = paste0(path_plotaverage,paste0(i$variable[1]),"_allGenotypes.pdf"))
+
 return(p)
-#ggsave(filename = paste0(path_plotaverage,paste0(i$variable[1]),"_allGenotypes.pdf"))
 
 
-#save_this<-paste0(path_plotaverage,paste0(i$variable[1]),"_allGenotypes.png")
-#if(file.exists(save_this)){
+save_this<-paste0(path_plotaverage,paste0(i$variable[1]),"_allGenotypes.png")
+if(file.exists(save_this)){
   
-#} else {
+} else {
   
   
-#  ggsave(file=paste0(path_plotaverage,paste0(i$variable[1]),"_allGenotypes.png"))
-#}
+  ggsave(file=paste0(path_plotaverage,paste0(i$variable[1]),"_allGenotypes.png"))
+}
 })
 

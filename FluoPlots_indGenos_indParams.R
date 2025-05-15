@@ -37,8 +37,8 @@ for(i in 1:length(list_mean_sd_Fluo)){
     list_plots_allFc[[i]]+geom_line(data=list_mean_sd_Fluo[[i]], 
                                     aes(x=as.Date(`Measuring Date`, format="%Y-%m-%d"),
                                         y=Mean,color=Condition, group=Condition))
-  #save_this<-paste0(path_plotaverage, paste0(list_mean_sd_Fluo[[i]]$Name[1], paste0(list_mean_sd_Fluo[[i]]$Index[1], ".png")))
- # if(file.exists(save_this)){
+  save_this<-paste0(path_plotaverage, paste0(list_mean_sd_Fluo[[i]]$Name[1], paste0(list_mean_sd_Fluo[[i]]$Index[1], ".png")))
+  if(file.exists(save_this)){
     
-  #} else {ggsave(file=paste0(path_plotaverage, paste0(list_mean_sd_Fluo[[i]]$Name[1], paste0(list_mean_sd_Fluo[[i]]$Index[1], ".png"))))}
+  } else {ggsave(file=paste0(path_plotaverage, paste0(list_mean_sd_Fluo[[i]]$Name[1], paste0(list_mean_sd_Fluo[[i]]$Index[1], ".png"))))}
 }

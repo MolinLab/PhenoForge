@@ -1,8 +1,8 @@
 #code composite plots
 
 
-dir.create("plots/correlograms/thesis")
-path_plotsDownstreamThesis<-"plots/correlograms/thesis/"
+dir.create("plots/correlograms")
+path_plotsDownstream<-"plots/correlograms/"
 
 
 testrunscatter<-lapply(CamData_Bonitur_TG_cut, function(i){
@@ -57,14 +57,14 @@ testrunscatter<-lapply(CamData_Bonitur_TG_cut, function(i){
 )
 names(testrunscatter)<-dates
 
-#path_plotsDownstreamThesis<-"~/Dokumente/Masterarbeit_AIT/Writing_TexStudio/Thesis_WheatVIZ/upload_plots/corrrelo"
 
-#lapply(testrunscatter, function(x){
+
+lapply(testrunscatter, function(x){
   
- # save_this<-paste0(path_plotsDownstreamThesis,paste0(x$title ,".png"))
- # if(file.exists(save_this)){
+  save_this<-paste0(path_plotsDownstream,paste0(x$title ,".png"))
+  if(file.exists(save_this)){
     
-  #} else {
- #   ggsave(x,filename = paste0(path_plotsDownstreamThesis,paste0(x$title ,".png")), width=15, height=15)
-  #}})
+  } else {
+    ggsave(x,filename = paste0(path_plotsDownstream,paste0(x$title ,".png")), width=15, height=15)
+  }})
 
