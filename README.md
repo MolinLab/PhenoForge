@@ -1,3 +1,4 @@
+# PhenoForge
 
 PhenoForge is a prototypical pipeline for data processing and analysis of phenotyping data from 
 hyperspectral, fluorescence and RGB measurements as well as meta-measurements like water-potential.
