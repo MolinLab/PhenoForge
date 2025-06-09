@@ -1,7 +1,7 @@
 combi_graphs<-list()
 
 
-for(i in seq(1:8)){p<-plot_grid(list_allgenos[[i]]+xlab(" ")+theme(legend.position = "none"), list_plots_meanOVERCondition[[i]]+labs(title= " ")+theme(axis.title.y = element_blank(), axis.text.y = element_blank(), axis.ticks.y = element_blank()), nrow=1,rel_widths = c(1,1.1)) 
+for(i in seq(1:7)){p<-plot_grid(list_allgenos[[i]]+xlab(" ")+theme(legend.position = "none"), list_plots_meanOVERCondition[[i]]+labs(title= " ")+theme(axis.title.y = element_blank(), axis.text.y = element_blank(), axis.ticks.y = element_blank()), nrow=1,rel_widths = c(1,1.1)) 
 combi_graphs[[length(combi_graphs)+1]]<-p
 
 }

@@ -99,7 +99,7 @@ list_meltTables_Named<-lapply(list_meltTables_all, merge_and_select, metatable)
 #names_measurements<-list(unique(names(list_meltTables_all)))
 
 list_of_names<-unique(metatable$Genotype)
-list_indices_Hc<-colnames(dplyr::select(list_Hc_Plant[[1]],  ends_with("avg")))
+list_indices_Hc<-colnames(dplyr::select(list_cutHc[[1]],  ends_with("avg")))
 #list_other-measurement-types
 
 list_indices_Fc<-colnames(list_Fc_Plant[[1]][,13:ncol(list_Fc_Plant[[1]])])

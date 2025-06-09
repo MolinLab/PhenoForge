@@ -279,16 +279,4 @@ for(iplot in names(boxes_TGscore_CondsamePlots_PSRI)){
 
 ```
 
-## Assumptions check for ANOVAs
-
-```{r}
-
-source("NDVI_anova_posthoc_all.R",local = knitr::knit_global())
-
-```
-
-## Differentiated drought stress group
-
-```{r,fig.height=7,fig.width=10}
-print(one_stats)
-```
+## 
